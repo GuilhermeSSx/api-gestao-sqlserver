@@ -7,7 +7,7 @@ const dotenv_1 = require("dotenv");
 const pool = new mssql_1.ConnectionPool({
     user: process.env.USER_DATABASE,
     password: process.env.PASSWORD_DATABASE,
-    server: 'jpnrgestao.database.windows.net',
+    server: 'jpnrgestaoserver.database.windows.net',
     database: process.env.DATABASE,
     options: {
         encrypt: true, // Use isso se você estiver usando o Azure
