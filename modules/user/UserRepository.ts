@@ -108,10 +108,9 @@ class UserRepository {
             const rowsAffected = result.rowsAffected[0];
 
             if (rowsAffected === 0) {
-                await transaction.rollback();
-                return this.handleError(response, 404, 'Usuário não encontrado');
+                return this.handleInformation(response, 404, 'Usuário não encontrado!');
             }
-
+            
             await transaction.commit();
 
             response.status(200).json({ message: 'Usuário excluído com sucesso', id });
@@ -148,6 +147,10 @@ class UserRepository {
             await transaction.rollback();
             this.handleError(response, 500, error);
         }
+    }
+
+    private handleInformation(response: Response, status: number, message: string) {
+        response.status(status).json({ message: message });
     }
 
     private handleError(response: Response, status: number, error: any) {
