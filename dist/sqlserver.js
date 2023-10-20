@@ -20,7 +20,6 @@ const pool = new mssql_1.ConnectionPool({
     database: process.env.DATABASE,
     port: Number(process.env.PORT_DATABASE),
     options: {
-        enableArithAbort: true,
         encrypt: true, // Use isso se você estiver usando o Azure
     },
 });
@@ -31,6 +30,19 @@ function initializePool() {
         try {
             yield pool.connect();
             console.log('Conexão com o banco de dados estabelecida.');
+            // Configurar o "keep alive" a cada 30 minutos (em milissegundos)
+            const keepAliveInterval = 30 * 60 * 1000; // 30 minutos
+            setInterval(() => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    // Execute uma consulta simples para manter a conexão ativa
+                    const request = pool.request();
+                    yield request.query('SELECT 1');
+                    console.log('Keep alive executado com sucesso.');
+                }
+                catch (error) {
+                    console.error('Erro no keep alive:', error);
+                }
+            }), keepAliveInterval);
         }
         catch (error) {
             console.error('Erro ao conectar ao banco de dados:', error);
