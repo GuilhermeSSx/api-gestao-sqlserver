@@ -18,10 +18,10 @@ const pool = new mssql_1.ConnectionPool({
     password: process.env.PASSWORD_DATABASE,
     server: 'jpnrgestaoserver.database.windows.net',
     database: process.env.DATABASE,
-    port: 1433,
     options: {
         encrypt: true, // Use isso se você estiver usando o Azure
     },
+    port: 49693,
 });
 exports.pool = pool;
 // Função para inicializar o pool de conexão
