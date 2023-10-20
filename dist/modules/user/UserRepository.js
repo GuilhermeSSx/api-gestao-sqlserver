@@ -77,6 +77,9 @@ class UserRepository {
                 if (usuarios.length > 0) {
                     response.status(200).json({ usuarios });
                 }
+                else {
+                    response.status(200).json({});
+                }
             }
             catch (error) {
                 this.handleError(response, 400, error);
