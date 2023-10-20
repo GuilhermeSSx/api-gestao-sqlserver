@@ -8,10 +8,14 @@ class UserRepository {
         const { name, email, password } = request.body;
         const passwordHash = await hash(password, 10);
 
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
         const transaction = pool.transaction();
 
         try {
-            pool.connect();
+            
             await transaction.begin();
 
             const poolRequest = transaction.request();
@@ -32,8 +36,11 @@ class UserRepository {
     async login(request: Request, response: Response) {
         const { email, password } = request.body;
 
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
         try {
-            pool.connect();
             const poolRequest = pool.request();
             poolRequest.input('email', email);
 
@@ -59,8 +66,11 @@ class UserRepository {
     }
 
     async getUsers(request: Request, response: Response) {
+
+        if (!pool.connected) {
+            await pool.connect();
+        }
         try {
-            pool.connect();
             const poolRequest = pool.request();
             const result = await poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
             const usuarios = result.recordset;
@@ -82,10 +92,13 @@ class UserRepository {
             return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
         }
 
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
         const transaction = pool.transaction();
 
         try {
-            pool.connect();
             await transaction.begin();
 
             const poolRequest = transaction.request();
@@ -111,10 +124,13 @@ class UserRepository {
     async criarPerfilAcesso(request: Request, response: Response) {
         const { nome_perfil_acesso } = request.body;
 
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
         const transaction = pool.transaction();
 
         try {
-            pool.connect();
             await transaction.begin();
 
             const poolRequest = transaction.request();

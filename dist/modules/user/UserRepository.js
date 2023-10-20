@@ -18,9 +18,11 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { name, email, password } = request.body;
             const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
             const transaction = sqlserver_1.pool.transaction();
             try {
-                sqlserver_1.pool.connect();
                 yield transaction.begin();
                 const poolRequest = transaction.request();
                 poolRequest.input('name', name);
@@ -39,8 +41,10 @@ class UserRepository {
     login(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = request.body;
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
             try {
-                sqlserver_1.pool.connect();
                 const poolRequest = sqlserver_1.pool.request();
                 poolRequest.input('email', email);
                 const result = yield poolRequest.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
@@ -63,8 +67,10 @@ class UserRepository {
     }
     getUsers(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
             try {
-                sqlserver_1.pool.connect();
                 const poolRequest = sqlserver_1.pool.request();
                 const result = yield poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
                 const usuarios = result.recordset;
@@ -86,9 +92,11 @@ class UserRepository {
             if (id === '585') {
                 return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
             }
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
             const transaction = sqlserver_1.pool.transaction();
             try {
-                sqlserver_1.pool.connect();
                 yield transaction.begin();
                 const poolRequest = transaction.request();
                 poolRequest.input('id', id);
@@ -110,9 +118,11 @@ class UserRepository {
     criarPerfilAcesso(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { nome_perfil_acesso } = request.body;
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
             const transaction = sqlserver_1.pool.transaction();
             try {
-                sqlserver_1.pool.connect();
                 yield transaction.begin();
                 const poolRequest = transaction.request();
                 poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);
