@@ -16,13 +16,13 @@ const dotenv_1 = require("dotenv");
 const pool = new mssql_1.ConnectionPool({
     user: process.env.USER_DATABASE,
     password: process.env.PASSWORD_DATABASE,
-    server: 'jpnrgestaoserver.database.windows.net',
+    server: String(process.env.HOST_DATABASE),
     database: process.env.DATABASE,
+    port: Number(process.env.PORT_DATABASE),
     options: {
         enableArithAbort: true,
         encrypt: true, // Use isso se você estiver usando o Azure
     },
-    port: 1433,
 });
 exports.pool = pool;
 // Função para inicializar o pool de conexão
