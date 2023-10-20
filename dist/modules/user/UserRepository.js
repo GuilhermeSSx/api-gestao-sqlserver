@@ -23,13 +23,8 @@ class UserRepository {
                 poolRequest.input('name', name);
                 poolRequest.input('email', email);
                 poolRequest.input('password', passwordHash);
-                const result = yield poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
-                if (result.rowsAffected[0] > 0) {
-                    response.status(200).json({ message: 'Usuário criado com sucesso!' });
-                }
-                else {
-                    this.handleError(response, 400, 'Falha ao criar usuário');
-                }
+                yield poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+                response.status(200).json({ message: 'Usuário criado com sucesso!' });
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -110,7 +105,7 @@ class UserRepository {
                     response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
                 }
                 else {
-                    this.handleError(response, 400, 'Erro ao criar o perfil de acesso');
+                    response.status(400).json({ error: 'Erro ao criar o perfil de acesso' });
                 }
             }
             catch (error) {
