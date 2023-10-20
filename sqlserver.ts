@@ -1,4 +1,4 @@
-import { ConnectionPool, Request as MssqlRequest } from 'mssql';
+import { ConnectionPool } from 'mssql';
 import { config } from 'dotenv';
 
 config(); // Carregue as variáveis de ambiente do arquivo .env
@@ -10,22 +10,23 @@ const pool = new ConnectionPool({
     database: process.env.DATABASE,
     port: Number(process.env.PORT_DATABASE),
     options: {
+        enableArithAbort: true,
         encrypt: true, // Use isso se você estiver usando o Azure
     },
+    
 });
 
-export async function executeQuery(query: string, params?: Record<string, any>): Promise<any> {
-    await pool.connect();
-    const request = new MssqlRequest(pool);
-    if (params) {
-        for (const paramName in params) {
-            request.input(paramName, params[paramName]);
-        }
-    }
+// Função para inicializar o pool de conexão
+async function initializePool() {
     try {
-        const result = await request.query(query);
-        return result.recordset;
-    } finally {
-        await pool.close();
+        await pool.connect();
+        console.log('Conexão com o banco de dados estabelecida.');
+    } catch (error) {
+        console.error('Erro ao conectar ao banco de dados:', error);
     }
 }
+
+// Chame a função de inicialização assim que o módulo for importado
+initializePool();
+
+export { pool };

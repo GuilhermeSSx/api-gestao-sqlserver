@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.executeQuery = void 0;
+exports.pool = void 0;
 const mssql_1 = require("mssql");
 const dotenv_1 = require("dotenv");
 (0, dotenv_1.config)(); // Carregue as variáveis de ambiente do arquivo .env
@@ -20,25 +20,22 @@ const pool = new mssql_1.ConnectionPool({
     database: process.env.DATABASE,
     port: Number(process.env.PORT_DATABASE),
     options: {
+        enableArithAbort: true,
         encrypt: true, // Use isso se você estiver usando o Azure
     },
 });
-function executeQuery(query, params) {
+exports.pool = pool;
+// Função para inicializar o pool de conexão
+function initializePool() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield pool.connect();
-        const request = new mssql_1.Request(pool);
-        if (params) {
-            for (const paramName in params) {
-                request.input(paramName, params[paramName]);
-            }
-        }
         try {
-            const result = yield request.query(query);
-            return result.recordset;
+            yield pool.connect();
+            console.log('Conexão com o banco de dados estabelecida.');
         }
-        finally {
-            yield pool.close();
+        catch (error) {
+            console.error('Erro ao conectar ao banco de dados:', error);
         }
     });
 }
-exports.executeQuery = executeQuery;
+// Chame a função de inicialização assim que o módulo for importado
+initializePool();
