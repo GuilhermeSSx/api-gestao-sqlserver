@@ -8,8 +8,9 @@ const pool = new ConnectionPool({
     password: process.env.PASSWORD_DATABASE,
     server: 'jpnrgestaoserver.database.windows.net',
     database: process.env.DATABASE,
+    port: 1433,
     options: {
-        encrypt: false, // Use isso se você estiver usando o Azure
+        encrypt: true, // Use isso se você estiver usando o Azure
     },
 });
 
