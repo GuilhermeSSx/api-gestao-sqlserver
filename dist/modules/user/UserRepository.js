@@ -12,21 +12,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRepository = void 0;
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
-const sqlserver_1 = require("../../sqlserver"); // Importe a conexão aqui
+const sqlserver_1 = require("../../sqlserver");
 class UserRepository {
     cadastrar(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { name, email, password } = request.body;
             const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
+            const transaction = sqlserver_1.pool.transaction();
             try {
-                const poolRequest = sqlserver_1.pool.request();
+                yield transaction.begin();
+                const poolRequest = transaction.request();
                 poolRequest.input('name', name);
                 poolRequest.input('email', email);
                 poolRequest.input('password', passwordHash);
                 yield poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+                yield transaction.commit();
                 response.status(200).json({ message: 'Usuário criado com sucesso!' });
             }
             catch (error) {
+                yield transaction.rollback();
                 this.handleError(response, 400, error);
             }
         });
@@ -79,17 +83,22 @@ class UserRepository {
             if (id === '585') {
                 return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
             }
+            const transaction = sqlserver_1.pool.transaction();
             try {
-                const poolRequest = sqlserver_1.pool.request();
+                yield transaction.begin();
+                const poolRequest = transaction.request();
                 poolRequest.input('id', id);
                 const result = yield poolRequest.query('DELETE FROM usuarios WHERE id = @id');
                 const rowsAffected = result.rowsAffected[0];
                 if (rowsAffected === 0) {
+                    yield transaction.rollback();
                     return this.handleError(response, 404, 'Usuário não encontrado');
                 }
+                yield transaction.commit();
                 response.status(200).json({ message: 'Usuário excluído com sucesso', id });
             }
             catch (error) {
+                yield transaction.rollback();
                 this.handleError(response, 400, error);
             }
         });
@@ -97,18 +106,23 @@ class UserRepository {
     criarPerfilAcesso(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { nome_perfil_acesso } = request.body;
+            const transaction = sqlserver_1.pool.transaction();
             try {
-                const poolRequest = sqlserver_1.pool.request();
+                yield transaction.begin();
+                const poolRequest = transaction.request();
                 poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);
                 const result = yield poolRequest.execute('NomeDaSuaStoredProcedure');
                 if (result.returnValue === 0) {
+                    yield transaction.commit();
                     response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
                 }
                 else {
+                    yield transaction.rollback();
                     response.status(400).json({ error: 'Erro ao criar o perfil de acesso' });
                 }
             }
             catch (error) {
+                yield transaction.rollback();
                 this.handleError(response, 500, error);
             }
         });
