@@ -4,20 +4,17 @@ import { sign } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 
 class UserRepository {
-    private handleError(response: Response, status: number, error: any) {
-        response.status(status).json({ error: error.toString() });
-    }
-
     async cadastrar(request: Request, response: Response) {
         const { name, email, password } = request.body;
-        try {
-            const passwordHash = await hash(password, 10);
-            const request = pool.request();
-            request.input('name', name);
-            request.input('email', email);
-            request.input('password', passwordHash);
+        const passwordHash = await hash(password, 10);
 
-            await request.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+        try {
+            const poolRequest = pool.request();
+            poolRequest.input('name', name);
+            poolRequest.input('email', email);
+            poolRequest.input('password', passwordHash);
+
+            await poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
             response.status(200).json({ message: 'Usuário criado com sucesso!' });
         } catch (error) {
             this.handleError(response, 400, error);
@@ -25,29 +22,25 @@ class UserRepository {
     }
 
     async login(request: Request, response: Response) {
-        let email: string; // Declare a variável 'email' aqui
-        if (request.body && request.body.email) {
-            email = request.body.email;
-        } else {
-            return this.handleError(response, 400, 'Email não fornecido');
-        }
+        const { email, password } = request.body;
 
         try {
-            const password = request.body.password;
             const poolRequest = pool.request();
             poolRequest.input('email', email);
 
-            const result = await poolRequest.query('SELECT * FROM usuarios WHERE email = @email');
-            if (result.recordset.length === 0) {
+            const result = await poolRequest.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
+            const user = result.recordset[0];
+
+            if (!user) {
                 return this.handleError(response, 404, 'Usuário não encontrado');
             }
 
-            const passwordMatch = await compare(password, result.recordset[0].password);
+            const passwordMatch = await compare(password, user.password);
             if (!passwordMatch) {
-                return this.handleError(response, 400, 'Erro na sua autenticação');
+                return this.handleError(response, 400, 'Erro na autenticação');
             }
 
-            const { id, name, role } = result.recordset[0]; // Removi 'email' daqui
+            const { id, name, role } = user;
             const token = sign({ id, name, email, role }, process.env.SECRET as string, { expiresIn: "1d" });
 
             response.status(200).json({ id, name, email, role, token });
@@ -58,10 +51,12 @@ class UserRepository {
 
     async getUsers(request: Request, response: Response) {
         try {
-            const request = pool.request();
-            const result = await request.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
-            if (result.recordset) {
-                response.status(200).json({ usuarios: result.recordset });
+            const poolRequest = pool.request();
+            const result = await poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
+            const usuarios = result.recordset;
+
+            if (usuarios.length > 0) {
+                response.status(200).json({ usuarios });
             } else {
                 response.status(404).json({ error: "Nenhum usuário encontrado" });
             }
@@ -78,11 +73,13 @@ class UserRepository {
         }
 
         try {
-            const request = pool.request();
-            request.input('id', id);
+            const poolRequest = pool.request();
+            poolRequest.input('id', id);
 
-            const result = await request.query('DELETE FROM usuarios WHERE id = @id');
-            if (result.rowsAffected[0] === 0) {
+            const result = await poolRequest.query('DELETE FROM usuarios WHERE id = @id');
+            const rowsAffected = result.rowsAffected[0];
+
+            if (rowsAffected === 0) {
                 return this.handleError(response, 404, 'Usuário não encontrado');
             }
 
@@ -108,6 +105,10 @@ class UserRepository {
         } catch (error) {
             this.handleError(response, 500, error);
         }
+    }
+
+    private handleError(response: Response, status: number, error: any) {
+        response.status(status).json({ error: error.toString() });
     }
 }
 
