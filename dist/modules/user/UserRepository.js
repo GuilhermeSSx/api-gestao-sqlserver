@@ -77,9 +77,6 @@ class UserRepository {
                 if (usuarios.length > 0) {
                     response.status(200).json({ usuarios });
                 }
-                else {
-                    response.status(404).json({ error: "Nenhum usuário encontrado" });
-                }
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -101,7 +98,11 @@ class UserRepository {
                 const poolRequest = transaction.request();
                 poolRequest.input('id', id);
                 const result = yield poolRequest.query('DELETE FROM usuarios WHERE id = @id');
-                result.rowsAffected[0];
+                const rowsAffected = result.rowsAffected[0];
+                if (rowsAffected === 0) {
+                    yield transaction.rollback();
+                    return this.handleError(response, 404, 'Usuário não encontrado');
+                }
                 yield transaction.commit();
                 response.status(200).json({ message: 'Usuário excluído com sucesso', id });
             }
