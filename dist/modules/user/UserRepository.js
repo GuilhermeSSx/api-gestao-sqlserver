@@ -19,29 +19,41 @@ const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
 class UserRepository {
     constructor() {
-        // Use a instância do pool de conexões aqui
         this.pool = sqlserver_1.default;
     }
     handleError(response, status, error) {
         response.status(status).json({ error: error.toString() });
     }
-    cadastrar(request, response) {
+    runTransaction(queries) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { name, email, password } = request.body;
-            const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
             const transaction = new mssql_1.Transaction(this.pool);
             try {
                 yield transaction.begin();
                 const requestInstance = transaction.request();
-                requestInstance.input('name', name);
-                requestInstance.input('email', email);
-                requestInstance.input('password', passwordHash);
-                yield requestInstance.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+                const result = yield queries(requestInstance);
                 yield transaction.commit();
-                response.status(200).json({ message: 'Usuário criado com sucesso!' });
+                return result;
             }
             catch (error) {
                 yield transaction.rollback();
+                throw error;
+            }
+        });
+    }
+    cadastrar(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { name, email, password } = request.body;
+            const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
+            try {
+                const result = yield this.runTransaction((requestInstance) => __awaiter(this, void 0, void 0, function* () {
+                    requestInstance.input('name', name);
+                    requestInstance.input('email', email);
+                    requestInstance.input('password', passwordHash);
+                    return requestInstance.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+                }));
+                response.status(200).json({ message: 'Usuário criado com sucesso!' });
+            }
+            catch (error) {
                 this.handleError(response, 400, error);
             }
         });
@@ -56,12 +68,10 @@ class UserRepository {
                 return this.handleError(response, 400, 'Email não fornecido');
             }
             try {
-                const transaction = new mssql_1.Transaction(this.pool);
-                yield transaction.begin();
-                const requestInstance = transaction.request();
-                requestInstance.input('email', email);
-                const result = yield requestInstance.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
-                yield transaction.commit();
+                const result = yield this.runTransaction((requestInstance) => __awaiter(this, void 0, void 0, function* () {
+                    requestInstance.input('email', email);
+                    return requestInstance.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
+                }));
                 if (result.recordset.length === 0) {
                     return this.handleError(response, 404, 'Usuário não encontrado');
                 }
@@ -81,11 +91,9 @@ class UserRepository {
     getUsers(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const transaction = new mssql_1.Transaction(this.pool);
-                yield transaction.begin();
-                const requestInstance = transaction.request();
-                const result = yield requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
-                yield transaction.commit();
+                const result = yield this.runTransaction((requestInstance) => __awaiter(this, void 0, void 0, function* () {
+                    return requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
+                }));
                 if (result.recordset) {
                     response.status(200).json({ usuarios: result.recordset });
                 }
@@ -105,12 +113,10 @@ class UserRepository {
                 return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
             }
             try {
-                const transaction = new mssql_1.Transaction(this.pool);
-                yield transaction.begin();
-                const requestInstance = transaction.request();
-                requestInstance.input('id', id);
-                const result = yield requestInstance.query('DELETE FROM usuarios WHERE id = @id');
-                yield transaction.commit();
+                const result = yield this.runTransaction((requestInstance) => __awaiter(this, void 0, void 0, function* () {
+                    requestInstance.input('id', id);
+                    return requestInstance.query('DELETE FROM usuarios WHERE id = @id');
+                }));
                 if (result.rowsAffected[0] === 0) {
                     return this.handleError(response, 404, 'Usuário não encontrado');
                 }
@@ -125,12 +131,10 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { nome_perfil_acesso } = request.body;
             try {
-                const transaction = new mssql_1.Transaction(this.pool);
-                yield transaction.begin();
-                const requestInstance = transaction.request();
-                requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
-                const result = yield requestInstance.execute('NomeDaSuaStoredProcedure');
-                yield transaction.commit();
+                const result = yield this.runTransaction((requestInstance) => __awaiter(this, void 0, void 0, function* () {
+                    requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
+                    return requestInstance.execute('NomeDaSuaStoredProcedure');
+                }));
                 if (result.returnValue === 0) {
                     response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
                 }

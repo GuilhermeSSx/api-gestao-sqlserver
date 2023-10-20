@@ -8,7 +8,6 @@ class UserRepository {
     private pool: ConnectionPool;
 
     constructor() {
-        // Use a instância do pool de conexões aqui
         this.pool = pool;
     }
 
@@ -16,23 +15,35 @@ class UserRepository {
         response.status(status).json({ error: error.toString() });
     }
 
-    async cadastrar(request: Request, response: Response) {
-        const { name, email, password } = request.body;
-        const passwordHash = await hash(password, 10);
+    private async runTransaction(queries: (request: any) => Promise<any>) {
         const transaction = new Transaction(this.pool);
 
         try {
             await transaction.begin();
             const requestInstance = transaction.request();
-            requestInstance.input('name', name);
-            requestInstance.input('email', email);
-            requestInstance.input('password', passwordHash);
-
-            await requestInstance.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+            const result = await queries(requestInstance);
             await transaction.commit();
-            response.status(200).json({ message: 'Usuário criado com sucesso!' });
+            return result;
         } catch (error) {
             await transaction.rollback();
+            throw error;
+        }
+    }
+
+    async cadastrar(request: Request, response: Response) {
+        const { name, email, password } = request.body;
+        const passwordHash = await hash(password, 10);
+
+        try {
+            const result = await this.runTransaction(async (requestInstance) => {
+                requestInstance.input('name', name);
+                requestInstance.input('email', email);
+                requestInstance.input('password', passwordHash);
+                return requestInstance.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+            });
+
+            response.status(200).json({ message: 'Usuário criado com sucesso!' });
+        } catch (error) {
             this.handleError(response, 400, error);
         }
     }
@@ -47,13 +58,10 @@ class UserRepository {
         }
 
         try {
-            const transaction = new Transaction(this.pool);
-            await transaction.begin();
-            const requestInstance = transaction.request();
-            requestInstance.input('email', email);
-
-            const result = await requestInstance.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
-            await transaction.commit();
+            const result = await this.runTransaction(async (requestInstance) => {
+                requestInstance.input('email', email);
+                return requestInstance.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
+            });
 
             if (result.recordset.length === 0) {
                 return this.handleError(response, 404, 'Usuário não encontrado');
@@ -77,11 +85,9 @@ class UserRepository {
 
     async getUsers(request: Request, response: Response) {
         try {
-            const transaction = new Transaction(this.pool);
-            await transaction.begin();
-            const requestInstance = transaction.request();
-            const result = await requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
-            await transaction.commit();
+            const result = await this.runTransaction(async (requestInstance) => {
+                return requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
+            });
 
             if (result.recordset) {
                 response.status(200).json({ usuarios: result.recordset });
@@ -101,13 +107,10 @@ class UserRepository {
         }
 
         try {
-            const transaction = new Transaction(this.pool);
-            await transaction.begin();
-            const requestInstance = transaction.request();
-            requestInstance.input('id', id);
-
-            const result = await requestInstance.query('DELETE FROM usuarios WHERE id = @id');
-            await transaction.commit();
+            const result = await this.runTransaction(async (requestInstance) => {
+                requestInstance.input('id', id);
+                return requestInstance.query('DELETE FROM usuarios WHERE id = @id');
+            });
 
             if (result.rowsAffected[0] === 0) {
                 return this.handleError(response, 404, 'Usuário não encontrado');
@@ -123,13 +126,10 @@ class UserRepository {
         const { nome_perfil_acesso } = request.body;
 
         try {
-            const transaction = new Transaction(this.pool);
-            await transaction.begin();
-            const requestInstance = transaction.request();
-            requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
-            const result = await requestInstance.execute('NomeDaSuaStoredProcedure');
-
-            await transaction.commit();
+            const result = await this.runTransaction(async (requestInstance) => {
+                requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
+                return requestInstance.execute('NomeDaSuaStoredProcedure');
+            });
 
             if (result.returnValue === 0) {
                 response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
