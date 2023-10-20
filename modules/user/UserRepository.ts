@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { hash, compare } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
-import { createConnection } from '../../sqlserver';
+import { connection } from '../../sqlserver';
 
 class UserRepository {
     async cadastrar(request: Request, response: Response) {
@@ -9,9 +9,6 @@ class UserRepository {
         const passwordHash = await hash(password, 10);
 
         try {
-            const connection = createConnection();
-            await connection.connect();
-
             const poolRequest = connection.request();
             poolRequest.input('name', name);
             poolRequest.input('email', email);
@@ -19,8 +16,6 @@ class UserRepository {
 
             await poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
             response.status(200).json({ message: 'Usuário criado com sucesso!' });
-
-            await connection.close();
         } catch (error) {
             this.handleError(response, 400, error);
         }
@@ -30,9 +25,6 @@ class UserRepository {
         const { email, password } = request.body;
 
         try {
-            const connection = createConnection();
-            await connection.connect();
-
             const poolRequest = connection.request();
             poolRequest.input('email', email);
 
@@ -52,8 +44,6 @@ class UserRepository {
             const token = sign({ id, name, email, role }, process.env.SECRET as string, { expiresIn: "1d" });
 
             response.status(200).json({ id, name, email, role, token });
-
-            await connection.close();
         } catch (error) {
             this.handleError(response, 400, error);
         }
@@ -61,9 +51,6 @@ class UserRepository {
 
     async getUsers(request: Request, response: Response) {
         try {
-            const connection = createConnection();
-            await connection.connect();
-
             const poolRequest = connection.request();
             const result = await poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
             const usuarios = result.recordset;
@@ -73,8 +60,6 @@ class UserRepository {
             } else {
                 response.status(404).json({ error: "Nenhum usuário encontrado" });
             }
-
-            await connection.close();
         } catch (error) {
             this.handleError(response, 400, error);
         }
@@ -88,9 +73,6 @@ class UserRepository {
         }
 
         try {
-            const connection = createConnection();
-            await connection.connect();
-
             const poolRequest = connection.request();
             poolRequest.input('id', id);
 
@@ -102,8 +84,6 @@ class UserRepository {
             }
 
             response.status(200).json({ message: 'Usuário excluído com sucesso', id });
-
-            await connection.close();
         } catch (error) {
             this.handleError(response, 400, error);
         }
@@ -113,9 +93,6 @@ class UserRepository {
         const { nome_perfil_acesso } = request.body;
 
         try {
-            const connection = createConnection();
-            await connection.connect();
-
             const poolRequest = connection.request();
             poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);
             const result = await poolRequest.execute('NomeDaSuaStoredProcedure');
@@ -125,8 +102,6 @@ class UserRepository {
             } else {
                 response.status(400).json({ error: 'Erro ao criar o perfil de acesso' });
             }
-
-            await connection.close();
         } catch (error) {
             this.handleError(response, 500, error);
         }

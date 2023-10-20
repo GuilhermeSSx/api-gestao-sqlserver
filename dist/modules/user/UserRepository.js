@@ -19,15 +19,12 @@ class UserRepository {
             const { name, email, password } = request.body;
             const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
             try {
-                const connection = (0, sqlserver_1.createConnection)();
-                yield connection.connect();
-                const poolRequest = connection.request();
+                const poolRequest = sqlserver_1.connection.request();
                 poolRequest.input('name', name);
                 poolRequest.input('email', email);
                 poolRequest.input('password', passwordHash);
                 yield poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
                 response.status(200).json({ message: 'Usuário criado com sucesso!' });
-                yield connection.close();
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -38,9 +35,7 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = request.body;
             try {
-                const connection = (0, sqlserver_1.createConnection)();
-                yield connection.connect();
-                const poolRequest = connection.request();
+                const poolRequest = sqlserver_1.connection.request();
                 poolRequest.input('email', email);
                 const result = yield poolRequest.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
                 const user = result.recordset[0];
@@ -54,7 +49,6 @@ class UserRepository {
                 const { id, name, role } = user;
                 const token = (0, jsonwebtoken_1.sign)({ id, name, email, role }, process.env.SECRET, { expiresIn: "1d" });
                 response.status(200).json({ id, name, email, role, token });
-                yield connection.close();
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -64,9 +58,7 @@ class UserRepository {
     getUsers(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const connection = (0, sqlserver_1.createConnection)();
-                yield connection.connect();
-                const poolRequest = connection.request();
+                const poolRequest = sqlserver_1.connection.request();
                 const result = yield poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
                 const usuarios = result.recordset;
                 if (usuarios.length > 0) {
@@ -75,7 +67,6 @@ class UserRepository {
                 else {
                     response.status(404).json({ error: "Nenhum usuário encontrado" });
                 }
-                yield connection.close();
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -89,9 +80,7 @@ class UserRepository {
                 return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
             }
             try {
-                const connection = (0, sqlserver_1.createConnection)();
-                yield connection.connect();
-                const poolRequest = connection.request();
+                const poolRequest = sqlserver_1.connection.request();
                 poolRequest.input('id', id);
                 const result = yield poolRequest.query('DELETE FROM usuarios WHERE id = @id');
                 const rowsAffected = result.rowsAffected[0];
@@ -99,7 +88,6 @@ class UserRepository {
                     return this.handleError(response, 404, 'Usuário não encontrado');
                 }
                 response.status(200).json({ message: 'Usuário excluído com sucesso', id });
-                yield connection.close();
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -110,9 +98,7 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { nome_perfil_acesso } = request.body;
             try {
-                const connection = (0, sqlserver_1.createConnection)();
-                yield connection.connect();
-                const poolRequest = connection.request();
+                const poolRequest = sqlserver_1.connection.request();
                 poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);
                 const result = yield poolRequest.execute('NomeDaSuaStoredProcedure');
                 if (result.returnValue === 0) {
@@ -121,7 +107,6 @@ class UserRepository {
                 else {
                     response.status(400).json({ error: 'Erro ao criar o perfil de acesso' });
                 }
-                yield connection.close();
             }
             catch (error) {
                 this.handleError(response, 500, error);
