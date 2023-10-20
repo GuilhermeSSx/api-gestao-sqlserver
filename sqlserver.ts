@@ -9,9 +9,10 @@ const pool = new ConnectionPool({
     server: 'jpnrgestaoserver.database.windows.net',
     database: process.env.DATABASE,
     options: {
+        enableArithAbort: true,
         encrypt: true, // Use isso se você estiver usando o Azure
     },
-    port: 49693,
+    port: 1433,
 });
 
 // Função para inicializar o pool de conexão
