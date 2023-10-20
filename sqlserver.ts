@@ -10,7 +10,6 @@ const pool = new ConnectionPool({
     database: process.env.DATABASE,
     port: Number(process.env.PORT_DATABASE),
     options: {
-        enableArithAbort: true,
         encrypt: true, // Use isso se você estiver usando o Azure
     },
 });
