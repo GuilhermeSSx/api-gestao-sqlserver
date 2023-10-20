@@ -22,11 +22,11 @@ class UserRepository {
             const { name, email, password } = request.body;
             try {
                 const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
-                const request = sqlserver_1.pool.request();
-                request.input('name', name);
-                request.input('email', email);
-                request.input('password', passwordHash);
-                yield request.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+                const requestInstance = sqlserver_1.pool.request();
+                requestInstance.input('name', name);
+                requestInstance.input('email', email);
+                requestInstance.input('password', passwordHash);
+                yield requestInstance.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
                 response.status(200).json({ message: 'Usuário criado com sucesso!' });
             }
             catch (error) {
@@ -45,9 +45,9 @@ class UserRepository {
             }
             try {
                 const password = request.body.password;
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('email', email);
-                const result = yield poolRequest.query('SELECT * FROM usuarios WHERE email = @email');
+                const requestInstance = sqlserver_1.pool.request();
+                requestInstance.input('email', email);
+                const result = yield requestInstance.query('SELECT * FROM usuarios WHERE email = @email');
                 if (result.recordset.length === 0) {
                     return this.handleError(response, 404, 'Usuário não encontrado');
                 }
@@ -67,8 +67,8 @@ class UserRepository {
     getUsers(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const request = sqlserver_1.pool.request();
-                const result = yield request.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
+                const requestInstance = sqlserver_1.pool.request();
+                const result = yield requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
                 if (result.recordset) {
                     response.status(200).json({ usuarios: result.recordset });
                 }
@@ -88,9 +88,9 @@ class UserRepository {
                 return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
             }
             try {
-                const request = sqlserver_1.pool.request();
-                request.input('id', id);
-                const result = yield request.query('DELETE FROM usuarios WHERE id = @id');
+                const requestInstance = sqlserver_1.pool.request();
+                requestInstance.input('id', id);
+                const result = yield requestInstance.query('DELETE FROM usuarios WHERE id = @id');
                 if (result.rowsAffected[0] === 0) {
                     return this.handleError(response, 404, 'Usuário não encontrado');
                 }
@@ -105,9 +105,9 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { nome_perfil_acesso } = request.body;
             try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);
-                const result = yield poolRequest.execute('NomeDaSuaStoredProcedure');
+                const requestInstance = sqlserver_1.pool.request();
+                requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
+                const result = yield requestInstance.execute('NomeDaSuaStoredProcedure');
                 if (result.returnValue === 0) {
                     response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
                 }
