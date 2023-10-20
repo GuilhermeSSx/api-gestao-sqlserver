@@ -12,6 +12,7 @@ class UserRepository {
     async cadastrar(request: Request, response: Response) {
         const { name, email, password } = request.body;
         try {
+            await pool.connect();
             const passwordHash = await hash(password, 10);
             const requestInstance = pool.request();
             requestInstance.input('name', name);
@@ -22,6 +23,9 @@ class UserRepository {
             response.status(200).json({ message: 'Usuário criado com sucesso!' });
         } catch (error) {
             this.handleError(response, 400, error);
+        }
+        finally {
+            pool.close();
         }
     }
 
@@ -34,6 +38,7 @@ class UserRepository {
         }
 
         try {
+            await pool.connect();
             const password = request.body.password;
             const requestInstance = pool.request();
             requestInstance.input('email', email);
@@ -55,10 +60,14 @@ class UserRepository {
         } catch (error) {
             this.handleError(response, 400, error);
         }
+        finally {
+            pool.close();
+        }
     }
 
     async getUsers(request: Request, response: Response) {
         try {
+            await pool.connect();
             const requestInstance = pool.request();
             const result = await requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
             if (result.recordset) {
@@ -68,6 +77,9 @@ class UserRepository {
             }
         } catch (error) {
             this.handleError(response, 400, error);
+        }
+        finally {
+            pool.close();
         }
     }
 
@@ -79,6 +91,7 @@ class UserRepository {
         }
 
         try {
+            await pool.connect();
             const requestInstance = pool.request();
             requestInstance.input('id', id);
 
@@ -91,12 +104,17 @@ class UserRepository {
         } catch (error) {
             this.handleError(response, 400, error);
         }
+        finally {
+            pool.close();
+        }
+        
     }
 
     async criarPerfilAcesso(request: Request, response: Response) {
         const { nome_perfil_acesso } = request.body;
 
         try {
+            await pool.connect();
             const requestInstance = pool.request();
             requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
             const result = await requestInstance.execute('NomeDaSuaStoredProcedure');
@@ -108,6 +126,9 @@ class UserRepository {
             }
         } catch (error) {
             this.handleError(response, 500, error);
+        }
+        finally {
+            pool.close();
         }
     }
 }
