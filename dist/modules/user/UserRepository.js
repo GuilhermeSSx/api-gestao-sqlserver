@@ -20,6 +20,7 @@ class UserRepository {
             const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
             const transaction = sqlserver_1.pool.transaction();
             try {
+                sqlserver_1.pool.connect();
                 yield transaction.begin();
                 const poolRequest = transaction.request();
                 poolRequest.input('name', name);
@@ -39,6 +40,7 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = request.body;
             try {
+                sqlserver_1.pool.connect();
                 const poolRequest = sqlserver_1.pool.request();
                 poolRequest.input('email', email);
                 const result = yield poolRequest.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
@@ -62,6 +64,7 @@ class UserRepository {
     getUsers(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                sqlserver_1.pool.connect();
                 const poolRequest = sqlserver_1.pool.request();
                 const result = yield poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
                 const usuarios = result.recordset;
@@ -85,6 +88,7 @@ class UserRepository {
             }
             const transaction = sqlserver_1.pool.transaction();
             try {
+                sqlserver_1.pool.connect();
                 yield transaction.begin();
                 const poolRequest = transaction.request();
                 poolRequest.input('id', id);
@@ -108,6 +112,7 @@ class UserRepository {
             const { nome_perfil_acesso } = request.body;
             const transaction = sqlserver_1.pool.transaction();
             try {
+                sqlserver_1.pool.connect();
                 yield transaction.begin();
                 const poolRequest = transaction.request();
                 poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);

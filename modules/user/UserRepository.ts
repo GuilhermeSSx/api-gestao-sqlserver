@@ -11,6 +11,7 @@ class UserRepository {
         const transaction = pool.transaction();
 
         try {
+            pool.connect();
             await transaction.begin();
 
             const poolRequest = transaction.request();
@@ -32,6 +33,7 @@ class UserRepository {
         const { email, password } = request.body;
 
         try {
+            pool.connect();
             const poolRequest = pool.request();
             poolRequest.input('email', email);
 
@@ -58,6 +60,7 @@ class UserRepository {
 
     async getUsers(request: Request, response: Response) {
         try {
+            pool.connect();
             const poolRequest = pool.request();
             const result = await poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
             const usuarios = result.recordset;
@@ -82,6 +85,7 @@ class UserRepository {
         const transaction = pool.transaction();
 
         try {
+            pool.connect();
             await transaction.begin();
 
             const poolRequest = transaction.request();
@@ -110,6 +114,7 @@ class UserRepository {
         const transaction = pool.transaction();
 
         try {
+            pool.connect();
             await transaction.begin();
 
             const poolRequest = transaction.request();
