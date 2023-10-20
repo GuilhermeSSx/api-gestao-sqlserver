@@ -1,9 +1,16 @@
-import { pool } from '../../sqlserver';
+import pool from '../../sqlserver';
+import { ConnectionPool, Transaction } from 'mssql';
 import { hash, compare } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import { Request, Response } from 'express';
 
 class UserRepository {
+    private pool: ConnectionPool;
+
+    constructor() {
+        // Use a instância do pool de conexões aqui
+        this.pool = pool;
+    }
 
     private handleError(response: Response, status: number, error: any) {
         response.status(status).json({ error: error.toString() });
@@ -11,26 +18,28 @@ class UserRepository {
 
     async cadastrar(request: Request, response: Response) {
         const { name, email, password } = request.body;
+        const passwordHash = await hash(password, 10);
+        const transaction = new Transaction(this.pool);
+
         try {
-            await pool.connect();
-            const passwordHash = await hash(password, 10);
-            const requestInstance = pool.request();
+            await transaction.begin();
+            const requestInstance = transaction.request();
             requestInstance.input('name', name);
             requestInstance.input('email', email);
             requestInstance.input('password', passwordHash);
 
             await requestInstance.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+            await transaction.commit();
             response.status(200).json({ message: 'Usuário criado com sucesso!' });
         } catch (error) {
+            await transaction.rollback();
             this.handleError(response, 400, error);
-        }
-        finally {
-            pool.close();
         }
     }
 
     async login(request: Request, response: Response) {
-        let email: string; // Declare a variável 'email' aqui
+        let email: string;
+
         if (request.body && request.body.email) {
             email = request.body.email;
         } else {
@@ -38,38 +47,42 @@ class UserRepository {
         }
 
         try {
-            await pool.connect();
-            const password = request.body.password;
-            const requestInstance = pool.request();
+            const transaction = new Transaction(this.pool);
+            await transaction.begin();
+            const requestInstance = transaction.request();
             requestInstance.input('email', email);
 
-            const result = await requestInstance.query('SELECT * FROM usuarios WHERE email = @email');
+            const result = await requestInstance.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
+            await transaction.commit();
+
             if (result.recordset.length === 0) {
                 return this.handleError(response, 404, 'Usuário não encontrado');
             }
 
-            const passwordMatch = await compare(password, result.recordset[0].password);
+            const { id, name, role, password } = result.recordset[0];
+
+            const passwordMatch = await compare(request.body.password, password);
+
             if (!passwordMatch) {
-                return this.handleError(response, 400, 'Erro na sua autenticação');
+                return this.handleError(response, 400, 'Erro na autenticação');
             }
 
-            const { id, name, role } = result.recordset[0]; // Removi 'email' daqui
             const token = sign({ id, name, email, role }, process.env.SECRET as string, { expiresIn: "1d" });
 
             response.status(200).json({ id, name, email, role, token });
         } catch (error) {
             this.handleError(response, 400, error);
         }
-        finally {
-            pool.close();
-        }
     }
 
     async getUsers(request: Request, response: Response) {
         try {
-            await pool.connect();
-            const requestInstance = pool.request();
+            const transaction = new Transaction(this.pool);
+            await transaction.begin();
+            const requestInstance = transaction.request();
             const result = await requestInstance.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
+            await transaction.commit();
+
             if (result.recordset) {
                 response.status(200).json({ usuarios: result.recordset });
             } else {
@@ -77,9 +90,6 @@ class UserRepository {
             }
         } catch (error) {
             this.handleError(response, 400, error);
-        }
-        finally {
-            pool.close();
         }
     }
 
@@ -91,11 +101,14 @@ class UserRepository {
         }
 
         try {
-            await pool.connect();
-            const requestInstance = pool.request();
+            const transaction = new Transaction(this.pool);
+            await transaction.begin();
+            const requestInstance = transaction.request();
             requestInstance.input('id', id);
 
             const result = await requestInstance.query('DELETE FROM usuarios WHERE id = @id');
+            await transaction.commit();
+
             if (result.rowsAffected[0] === 0) {
                 return this.handleError(response, 404, 'Usuário não encontrado');
             }
@@ -104,20 +117,19 @@ class UserRepository {
         } catch (error) {
             this.handleError(response, 400, error);
         }
-        finally {
-            pool.close();
-        }
-        
     }
 
     async criarPerfilAcesso(request: Request, response: Response) {
         const { nome_perfil_acesso } = request.body;
 
         try {
-            await pool.connect();
-            const requestInstance = pool.request();
+            const transaction = new Transaction(this.pool);
+            await transaction.begin();
+            const requestInstance = transaction.request();
             requestInstance.input('NomePerfilAcesso', nome_perfil_acesso);
             const result = await requestInstance.execute('NomeDaSuaStoredProcedure');
+
+            await transaction.commit();
 
             if (result.returnValue === 0) {
                 response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
@@ -126,9 +138,6 @@ class UserRepository {
             }
         } catch (error) {
             this.handleError(response, 500, error);
-        }
-        finally {
-            pool.close();
         }
     }
 }

@@ -14,4 +14,12 @@ const pool = new ConnectionPool({
     },
 });
 
-export { pool };
+pool.connect()
+    .then(() => {
+        console.log('Conexão com o banco de dados estabelecida com sucesso.');
+    })
+    .catch((error) => {
+        console.error('Erro ao conectar ao banco de dados:', error);
+    });
+
+export default pool;
