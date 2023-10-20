@@ -14,8 +14,13 @@ class UserRepository {
             poolRequest.input('email', email);
             poolRequest.input('password', passwordHash);
 
-            await poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
-            response.status(200).json({ message: 'Usuário criado com sucesso!' });
+            const result = await poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+
+            if (result.rowsAffected[0] > 0) {
+                response.status(200).json({ message: 'Usuário criado com sucesso!' });
+            } else {
+                response.status(500).json({ error: 'Erro ao criar o usuário' });
+            }
         } catch (error) {
             this.handleError(response, 400, error);
         }
