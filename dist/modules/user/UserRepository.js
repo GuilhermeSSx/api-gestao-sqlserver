@@ -56,9 +56,9 @@ class UserRepository {
                 if (!passwordMatch) {
                     return this.handleError(response, 400, 'Erro na autenticação');
                 }
-                const { id, name, role } = user;
-                const token = (0, jsonwebtoken_1.sign)({ id, name, email, role }, process.env.SECRET, { expiresIn: "1d" });
-                response.status(200).json({ id, name, email, role, token });
+                const { id, name, userEmail, role, } = user;
+                const token = (0, jsonwebtoken_1.sign)({ id, name, userEmail, role }, process.env.SECRET, { expiresIn: "1d" });
+                response.status(200).json({ id, name, userEmail, role, token });
             }
             catch (error) {
                 this.handleError(response, 400, error);

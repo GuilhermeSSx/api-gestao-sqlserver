@@ -56,10 +56,10 @@ class UserRepository {
                 return this.handleError(response, 400, 'Erro na autenticação');
             }
 
-            const { id, name, role } = user;
-            const token = sign({ id, name, email, role }, process.env.SECRET as string, { expiresIn: "1d" });
+            const { id, name, userEmail, role,  } = user;
+            const token = sign({ id, name, userEmail, role }, process.env.SECRET as string, { expiresIn: "1d" });
 
-            response.status(200).json({ id, name, email, role, token });
+            response.status(200).json({ id, name, userEmail, role, token });
         } catch (error) {
             this.handleError(response, 400, error);
         }
