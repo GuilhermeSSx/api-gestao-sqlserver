@@ -34,7 +34,7 @@ userRoutes.delete('/excluir-perfil-acesso', (request, response) => {
     userRepository.excluirPerfilAcesso(request, response);
 })
 
-userRoutes.get('/get-perfil-acesso', (request, response) => {
+userRoutes.post('/get-perfil-acesso', (request, response) => {
     userRepository.carregarPerfilAcesso(request, response);
 })
 
