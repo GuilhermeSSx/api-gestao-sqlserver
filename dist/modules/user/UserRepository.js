@@ -172,6 +172,40 @@ class UserRepository {
             }
         });
     }
+    carregarPerfilAcesso(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id_perfil_acesso } = request.body;
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
+                const result = yield poolRequest.execute('uspCarregarPerfilAcesso');
+                let modulos_acessos;
+                let funcionalidades_acessos;
+                if (Array.isArray(result.recordsets)) {
+                    // Se for um array, você pode acessar o índice '0' para obter os resultados
+                    modulos_acessos = result.recordsets[0];
+                    funcionalidades_acessos = result.recordsets[1];
+                }
+                else {
+                    // Caso contrário, é um objeto com índices de string, você pode acessar pelo nome
+                    modulos_acessos = result.recordsets['0'];
+                    funcionalidades_acessos = result.recordsets['1'];
+                }
+                if (result.returnValue === 0) {
+                    response.status(200).json({ modulos_acessos, funcionalidades_acessos });
+                }
+                else {
+                    this.handleError(response, 400, result.recordset[0].Retorno);
+                }
+            }
+            catch (error) {
+                this.handleError(response, 500, error);
+            }
+        });
+    }
     handleError(response, status, error) {
         response.status(status).json({ error: error.toString() });
     }

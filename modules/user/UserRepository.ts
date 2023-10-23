@@ -56,7 +56,7 @@ class UserRepository {
                 return this.handleError(response, 400, 'Erro na autenticação');
             }
 
-            const { id, name, userEmail, role,  } = user;
+            const { id, name, userEmail, role, } = user;
             const token = sign({ id, name, userEmail, role }, process.env.SECRET as string, { expiresIn: "1d" });
 
             response.status(200).json({ id, name, userEmail, role, token });
@@ -129,8 +129,8 @@ class UserRepository {
             const poolRequest = pool.request();
             poolRequest.input('NOME_PERFIL_ACESSO', nome_perfil_acesso);
             const result = await poolRequest.execute('uspCriarPerfilAcesso');
-            
-            
+
+
             if (result.returnValue === 0) {
                 response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
             } else {
@@ -171,7 +171,7 @@ class UserRepository {
             const poolRequest = pool.request();
             poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
             const result = await poolRequest.execute('uspExcluirPerfilAcesso');
-            
+
             if (result.returnValue === 0) {
                 response.status(200).json({ message: result.recordset[0].Retorno });
             } else {
@@ -184,10 +184,49 @@ class UserRepository {
         }
     }
 
+    async carregarPerfilAcesso(request: Request, response: Response) {
+        const { id_perfil_acesso } = request.body;
+    
+        if (!pool.connected) {
+            await pool.connect();
+        }
+    
+        try {
+            const poolRequest = pool.request();
+            poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
+            const result = await poolRequest.execute('uspCarregarPerfilAcesso');
+            let modulos_acessos;
+            let funcionalidades_acessos;
+    
+            if (Array.isArray(result.recordsets)) {
+                // Se for um array, você pode acessar o índice '0' para obter os resultados
+                modulos_acessos = result.recordsets[0];
+                funcionalidades_acessos = result.recordsets[1];
+            } else {
+                // Caso contrário, é um objeto com índices de string, você pode acessar pelo nome
+                modulos_acessos = result.recordsets['0'];
+                funcionalidades_acessos = result.recordsets['1'];
+            }
+    
+            if (result.returnValue === 0) {
+                response.status(200).json({ modulos_acessos, funcionalidades_acessos });
+            } else {
+                this.handleError(response, 400, result.recordset[0].Retorno);
+            }
+        } catch (error) {
+            this.handleError(response, 500, error);
+        }
+    }
+    
+
+
+
+
+
     private handleError(response: Response, status: number, error: any) {
         response.status(status).json({ error: error.toString() });
     }
-    
+
 }
 
 export { UserRepository };

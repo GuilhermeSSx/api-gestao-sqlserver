@@ -28,3 +28,6 @@ userRoutes.get('/get-perfil-acessos', (request, response) => {
 userRoutes.delete('/excluir-perfil-acesso', (request, response) => {
     userRepository.excluirPerfilAcesso(request, response);
 });
+userRoutes.get('/get-perfil-acesso', (request, response) => {
+    userRepository.carregarPerfilAcesso(request, response);
+});
