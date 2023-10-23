@@ -19,3 +19,12 @@ userRoutes.get('/get-users', (request, response) => {
 userRoutes.delete('/delete-user/:id', (request, response) => {
     userRepository.deleteUser(request, response);
 });
+userRoutes.post('/criar-perfil-acesso', (request, response) => {
+    userRepository.criarPerfilAcesso(request, response);
+});
+userRoutes.get('/get-perfil-acessos', (request, response) => {
+    userRepository.getPerfilAcessos(request, response);
+});
+userRoutes.delete('/excluir-perfil-acesso', (request, response) => {
+    userRepository.excluirPerfilAcesso(request, response);
+});

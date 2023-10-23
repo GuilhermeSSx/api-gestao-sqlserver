@@ -125,24 +125,61 @@ class UserRepository {
             await pool.connect();
         }
 
-        const transaction = pool.transaction();
-
         try {
-            await transaction.begin();
-
-            const poolRequest = transaction.request();
-            poolRequest.input('NomePerfilAcesso', nome_perfil_acesso);
-            const result = await poolRequest.execute('NomeDaSuaStoredProcedure');
-
+            const poolRequest = pool.request();
+            poolRequest.input('NOME_PERFIL_ACESSO', nome_perfil_acesso);
+            const result = await poolRequest.execute('uspCriarPerfilAcesso');
+            
+            
             if (result.returnValue === 0) {
-                await transaction.commit();
                 response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
             } else {
-                await transaction.rollback();
-                response.status(400).json({ error: 'Erro ao criar o perfil de acesso' });
+                // console.log(result.recordset[0].Retorno);
+                this.handleError(response, 400, result.recordset[0].Retorno);
             }
+
         } catch (error) {
-            await transaction.rollback();
+            this.handleError(response, 500, error);
+        }
+    }
+
+    async getPerfilAcessos(request: Request, response: Response) {
+
+        if (!pool.connected) {
+            await pool.connect();
+        }
+        try {
+            const poolRequest = pool.request();
+            const result = await poolRequest.query('SELECT id_perfil_acesso, nome_perfil_acesso FROM perfil_acesso ORDER BY nome_perfil_acesso ASC');
+            const perfil_acessos = result.recordset;
+
+            response.status(200).json({ perfil_acessos });
+
+        } catch (error) {
+            this.handleError(response, 400, error);
+        }
+    }
+
+    async excluirPerfilAcesso(request: Request, response: Response) {
+        const { id_perfil_acesso } = request.body;
+
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
+        try {
+            const poolRequest = pool.request();
+            poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
+            const result = await poolRequest.execute('uspExcluirPerfilAcesso');
+            
+            if (result.returnValue === 0) {
+                response.status(200).json({ message: result.recordset[0].Retorno });
+            } else {
+                // console.log(result.recordset[0].Retorno);
+                this.handleError(response, 400, result.recordset[0].Retorno);
+            }
+
+        } catch (error) {
             this.handleError(response, 500, error);
         }
     }
@@ -150,6 +187,7 @@ class UserRepository {
     private handleError(response: Response, status: number, error: any) {
         response.status(status).json({ error: error.toString() });
     }
+    
 }
 
 export { UserRepository };
