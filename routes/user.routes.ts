@@ -38,6 +38,14 @@ userRoutes.post('/get-perfil-acesso', (request, response) => {
     userRepository.carregarPerfilAcesso(request, response);
 })
 
+userRoutes.put('/update-acesso-modulo', (request, response) => {
+    userRepository.updateAcessoModulo(request, response);
+})
+
+userRoutes.put('/update-acesso-funcionalidade', (request, response) => {
+    userRepository.updateAcessoFuncionalidade(request, response);
+})
+
 // userRoutes.get('/get-user', login, (request, response) => {
 //     userRepository.getUser(request, response);
 // })

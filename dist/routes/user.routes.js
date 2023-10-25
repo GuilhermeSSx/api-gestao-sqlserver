@@ -31,3 +31,9 @@ userRoutes.delete('/excluir-perfil-acesso', (request, response) => {
 userRoutes.post('/get-perfil-acesso', (request, response) => {
     userRepository.carregarPerfilAcesso(request, response);
 });
+userRoutes.put('/update-acesso-modulo', (request, response) => {
+    userRepository.updateAcessoModulo(request, response);
+});
+userRoutes.put('/update-acesso-funcionalidade', (request, response) => {
+    userRepository.updateAcessoFuncionalidade(request, response);
+});

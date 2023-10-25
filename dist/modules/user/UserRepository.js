@@ -206,6 +206,58 @@ class UserRepository {
             }
         });
     }
+    updateAcessoModulo(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { ID_MODULO_ACESSO_LIST, ACESSO_LIST } = request.body;
+            if (ID_MODULO_ACESSO_LIST === '') {
+                return this.handleError(response, 401, 'Nenhum ou algum ID_MODULO_ACESSO_LIST não encontrado.');
+            }
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('ID_MODULO_ACESSO_LIST', ID_MODULO_ACESSO_LIST);
+                poolRequest.input('ACESSO_LIST', ACESSO_LIST);
+                const result = yield poolRequest.execute('uspAtualizarModuloAcesso');
+                if (result.returnValue === 0) {
+                    response.status(200).json({ message: 'Modulo Acesso atualizado com sucesso!' });
+                }
+                else {
+                    this.handleError(response, 400, result.recordset[0].Retorno);
+                }
+            }
+            catch (error) {
+                this.handleError(response, 500, error);
+            }
+        });
+    }
+    updateAcessoFuncionalidade(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { ID_FUNCIONALIDADE_ACESSO_LIST, ACESSO_LIST } = request.body;
+            if (ID_FUNCIONALIDADE_ACESSO_LIST === '') {
+                return this.handleError(response, 401, 'Nenhum ou algum ID_MODULO_ACESSO_LIST não encontrado.');
+            }
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('ID_FUNCIONALIDADE_ACESSO_LIST', ID_FUNCIONALIDADE_ACESSO_LIST);
+                poolRequest.input('ACESSO_LIST', ACESSO_LIST);
+                const result = yield poolRequest.execute('uspAtualizarFuncionalidadeAcesso');
+                if (result.returnValue === 0) {
+                    response.status(200).json({ message: 'Funcionalidade Acesso atualizado com sucesso!' });
+                }
+                else {
+                    this.handleError(response, 400, result.recordset[0].Retorno);
+                }
+            }
+            catch (error) {
+                this.handleError(response, 500, error);
+            }
+        });
+    }
     handleError(response, status, error) {
         response.status(status).json({ error: error.toString() });
     }
