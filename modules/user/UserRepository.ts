@@ -5,7 +5,7 @@ import { pool } from '../../sqlserver';
 
 class UserRepository {
     async cadastrar(request: Request, response: Response) {
-        const { name, email, password } = request.body;
+        const { name, email, password, role } = request.body;
         const passwordHash = await hash(password, 10);
 
         if (!pool.connected) {
@@ -22,8 +22,9 @@ class UserRepository {
             poolRequest.input('name', name);
             poolRequest.input('email', email);
             poolRequest.input('password', passwordHash);
+            poolRequest.input('role', role);
 
-            await poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+            await poolRequest.query('INSERT INTO usuarios (name, email, password, role) VALUES (@name, @email, @password, @role)');
             await transaction.commit();
 
             response.status(200).json({ message: 'Usuário criado com sucesso!' });

@@ -16,7 +16,7 @@ const sqlserver_1 = require("../../sqlserver");
 class UserRepository {
     cadastrar(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { name, email, password } = request.body;
+            const { name, email, password, role } = request.body;
             const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
@@ -28,7 +28,8 @@ class UserRepository {
                 poolRequest.input('name', name);
                 poolRequest.input('email', email);
                 poolRequest.input('password', passwordHash);
-                yield poolRequest.query('INSERT INTO usuarios (name, email, password) VALUES (@name, @email, @password)');
+                poolRequest.input('role', role);
+                yield poolRequest.query('INSERT INTO usuarios (name, email, password, role) VALUES (@name, @email, @password, @role)');
                 yield transaction.commit();
                 response.status(200).json({ message: 'Usuário criado com sucesso!' });
             }

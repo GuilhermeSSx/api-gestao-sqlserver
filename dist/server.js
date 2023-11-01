@@ -10,7 +10,7 @@ const dotenv_1 = require("dotenv");
 const app = (0, express_1.default)();
 const cors = require('cors');
 app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Origin", "http://localhost:4000, https://jpnr-gestao-sqlserver.vercel.app/");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     next();
