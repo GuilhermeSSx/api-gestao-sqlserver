@@ -130,10 +130,15 @@ class UserRepository {
             const poolRequest = pool.request();
             poolRequest.input('NOME_PERFIL_ACESSO', nome_perfil_acesso);
             const result = await poolRequest.execute('uspCriarPerfilAcesso');
-
+            
+            console.log(result.recordset);
 
             if (result.returnValue === 0) {
-                response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
+                if(result.recordset[0].Retorno.includes('nome_PA_UNIQUE')) {
+                    this.handleError(response, 400, result.recordset[0].Retorno);
+                } else {
+                    response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
+                }           
             } else {
                 // console.log(result.recordset[0].Retorno);
                 this.handleError(response, 400, result.recordset[0].Retorno);
