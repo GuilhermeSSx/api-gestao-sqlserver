@@ -123,16 +123,17 @@ class UserRepository {
                 const result = yield poolRequest.execute('uspCriarPerfilAcesso');
                 console.log(result.recordset);
                 if (result.returnValue === 0) {
-                    if (result.recordset[0].Retorno.includes('nome_PA_UNIQUE')) {
-                        this.handleError(response, 400, result.recordset[0].Retorno);
+                    if (result.recordset && result.recordset[0] && result.recordset[0].Retorno.includes('nome_PA_UNIQUE')) {
+                        console.log('É UM NOME REPETIDO!');
                     }
                     else {
                         response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
                     }
                 }
                 else {
-                    // console.log(result.recordset[0].Retorno);
-                    this.handleError(response, 400, result.recordset[0].Retorno);
+                    // Se 'result.recordset' for undefined ou não tiver o índice [0], tratar o erro
+                    const errorMessage = result.recordset && result.recordset[0] ? result.recordset[0].Retorno : 'Erro desconhecido';
+                    this.handleError(response, 400, errorMessage);
                 }
             }
             catch (error) {

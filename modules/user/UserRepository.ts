@@ -130,18 +130,20 @@ class UserRepository {
             const poolRequest = pool.request();
             poolRequest.input('NOME_PERFIL_ACESSO', nome_perfil_acesso);
             const result = await poolRequest.execute('uspCriarPerfilAcesso');
-            
+
             console.log(result.recordset);
 
+
             if (result.returnValue === 0) {
-                if(result.recordset[0].Retorno.includes('nome_PA_UNIQUE')) {
-                    this.handleError(response, 400, result.recordset[0].Retorno);
+                if (result.recordset && result.recordset[0] && result.recordset[0].Retorno.includes('nome_PA_UNIQUE')) {
+                    console.log('É UM NOME REPETIDO!');
                 } else {
                     response.status(200).json({ message: 'Perfil de Acesso criado com sucesso!' });
-                }           
+                }
             } else {
-                // console.log(result.recordset[0].Retorno);
-                this.handleError(response, 400, result.recordset[0].Retorno);
+                // Se 'result.recordset' for undefined ou não tiver o índice [0], tratar o erro
+                const errorMessage = result.recordset && result.recordset[0] ? result.recordset[0].Retorno : 'Erro desconhecido';
+                this.handleError(response, 400, errorMessage);
             }
 
         } catch (error) {
@@ -192,18 +194,18 @@ class UserRepository {
 
     async carregarPerfilAcesso(request: Request, response: Response) {
         const { id_perfil_acesso } = request.body;
-    
+
         if (!pool.connected) {
             await pool.connect();
         }
-    
+
         try {
             const poolRequest = pool.request();
             poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
             const result = await poolRequest.execute('uspCarregarPerfilAcesso');
             let modulos_acessos;
             let funcionalidades_acessos;
-    
+
             if (Array.isArray(result.recordsets)) {
                 // Se for um array, você pode acessar o índice '0' para obter os resultados
                 modulos_acessos = result.recordsets[0];
@@ -213,7 +215,7 @@ class UserRepository {
                 modulos_acessos = result.recordsets['0'];
                 funcionalidades_acessos = result.recordsets['1'];
             }
-    
+
             if (result.returnValue === 0) {
                 response.status(200).json({ modulos_acessos, funcionalidades_acessos });
             } else {
@@ -230,11 +232,11 @@ class UserRepository {
         if (ID_MODULO_ACESSO_LIST === '') {
             return this.handleError(response, 401, 'Nenhum ou algum ID_MODULO_ACESSO_LIST não encontrado.');
         }
-    
+
         if (!pool.connected) {
             await pool.connect();
         }
-    
+
         try {
             const poolRequest = pool.request();
             poolRequest.input('ID_MODULO_ACESSO_LIST', ID_MODULO_ACESSO_LIST);
@@ -258,11 +260,11 @@ class UserRepository {
         if (ID_FUNCIONALIDADE_ACESSO_LIST === '') {
             return this.handleError(response, 401, 'Nenhum ou algum ID_MODULO_ACESSO_LIST não encontrado.');
         }
-    
+
         if (!pool.connected) {
             await pool.connect();
         }
-    
+
         try {
             const poolRequest = pool.request();
             poolRequest.input('ID_FUNCIONALIDADE_ACESSO_LIST', ID_FUNCIONALIDADE_ACESSO_LIST);
@@ -279,7 +281,7 @@ class UserRepository {
             this.handleError(response, 500, error);
         }
     }
-    
+
 
 
 
