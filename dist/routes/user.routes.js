@@ -37,3 +37,6 @@ userRoutes.put('/update-acesso-modulo', (request, response) => {
 userRoutes.put('/update-acesso-funcionalidade', (request, response) => {
     userRepository.updateAcessoFuncionalidade(request, response);
 });
+userRoutes.get('/get-usuario-filtrado', (request, response) => {
+    userRepository.getUsuariosFiltrados(request, response);
+});

@@ -259,6 +259,24 @@ class UserRepository {
             }
         });
     }
+    getUsuariosFiltrados(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { query } = request.body;
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('QUERY', query);
+                const result = yield poolRequest.execute('uspFiltrarUsuarios');
+                const usuarios_filtrados = result.recordset;
+                response.status(200).json({ usuarios_filtrados });
+            }
+            catch (error) {
+                this.handleError(response, 400, error);
+            }
+        });
+    }
     handleError(response, status, error) {
         response.status(status).json({ error: error.toString() });
     }

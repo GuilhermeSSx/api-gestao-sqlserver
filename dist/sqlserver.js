@@ -15,3 +15,4 @@ const pool = new mssql_1.ConnectionPool({
     }
 });
 exports.pool = pool;
+// MUDADO PARA O GOOGLE CLOUD SQLSERVER

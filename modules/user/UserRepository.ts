@@ -275,8 +275,25 @@ class UserRepository {
         }
     }
 
+    async getUsuariosFiltrados(request: Request, response: Response) {
+        const { query } = request.body;
 
+        if (!pool.connected) {
+            await pool.connect();
+        }
 
+        try {
+            const poolRequest = pool.request();
+            poolRequest.input('QUERY', query);
+            const result = await poolRequest.execute('uspFiltrarUsuarios');
+            const usuarios_filtrados = result.recordset;
+
+            response.status(200).json( { usuarios_filtrados } );
+
+        } catch (error) {
+            this.handleError(response, 400, error);
+        }
+    }
 
 
 
