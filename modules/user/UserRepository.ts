@@ -275,7 +275,7 @@ class UserRepository {
         }
     }
 
-    async getUsuariosFiltrados(request: Request, response: Response) {
+    async UsuariosFiltrados(request: Request, response: Response) {
         const { query } = request.body;
 
         if (!pool.connected) {

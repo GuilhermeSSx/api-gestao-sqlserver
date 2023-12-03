@@ -259,7 +259,7 @@ class UserRepository {
             }
         });
     }
-    getUsuariosFiltrados(request, response) {
+    UsuariosFiltrados(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { query } = request.body;
             if (!sqlserver_1.pool.connected) {
