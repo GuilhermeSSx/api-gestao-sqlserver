@@ -276,7 +276,7 @@ class UserRepository {
     }
 
     async UsuariosFiltrados(request: Request, response: Response) {
-        const { query } = request.body;
+        const { search } = request.body;
 
         if (!pool.connected) {
             await pool.connect();
@@ -284,7 +284,7 @@ class UserRepository {
 
         try {
             const poolRequest = pool.request();
-            poolRequest.input('QUERY', query);
+            poolRequest.input('SEARCH', search);
             const result = await poolRequest.execute('uspFiltrarUsuarios');
             const usuarios_filtrados = result.recordset;
 

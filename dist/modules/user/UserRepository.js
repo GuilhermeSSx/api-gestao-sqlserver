@@ -261,13 +261,13 @@ class UserRepository {
     }
     UsuariosFiltrados(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { query } = request.body;
+            const { search } = request.body;
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
             }
             try {
                 const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('QUERY', query);
+                poolRequest.input('SEARCH', search);
                 const result = yield poolRequest.execute('uspFiltrarUsuarios');
                 const usuarios_filtrados = result.recordset;
                 response.status(200).json({ usuarios_filtrados });
