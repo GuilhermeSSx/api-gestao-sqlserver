@@ -25,6 +25,9 @@ userRoutes.post('/criar-perfil-acesso', (request, response) => {
 userRoutes.get('/get-perfil-acessos', (request, response) => {
     userRepository.getPerfilAcessos(request, response);
 });
+userRoutes.get('/get-perfil-acessos-usuario', (request, response) => {
+    userRepository.getPerfilAcessosUsuario(request, response);
+});
 userRoutes.delete('/excluir-perfil-acesso', (request, response) => {
     userRepository.excluirPerfilAcesso(request, response);
 });
@@ -39,4 +42,7 @@ userRoutes.put('/update-acesso-funcionalidade', (request, response) => {
 });
 userRoutes.post('/get-usuario-filtrado', (request, response) => {
     userRepository.UsuariosFiltrados(request, response);
+});
+userRoutes.put('/update-usuario-role', (request, response) => {
+    userRepository.updateUsuarioRole(request, response);
 });

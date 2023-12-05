@@ -16,7 +16,7 @@ const sqlserver_1 = require("../../sqlserver");
 class UserRepository {
     cadastrar(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { name, email, password, role } = request.body;
+            const { name, email, password, role_id } = request.body;
             const passwordHash = yield (0, bcrypt_1.hash)(password, 10);
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
@@ -28,8 +28,8 @@ class UserRepository {
                 poolRequest.input('name', name);
                 poolRequest.input('email', email);
                 poolRequest.input('password', passwordHash);
-                poolRequest.input('role', role);
-                yield poolRequest.query('INSERT INTO usuarios (name, email, password, role) VALUES (@name, @email, @password, @role)');
+                poolRequest.input('role_id', role_id);
+                yield poolRequest.query('INSERT INTO usuarios (name, email, password, role_id) VALUES (@name, @email, @password, @role_id)');
                 yield transaction.commit();
                 response.status(200).json({ message: 'Usuário criado com sucesso!' });
             }
@@ -48,7 +48,7 @@ class UserRepository {
             try {
                 const poolRequest = sqlserver_1.pool.request();
                 poolRequest.input('email', email);
-                const result = yield poolRequest.query('SELECT id, name, role, password FROM usuarios WHERE email = @email');
+                const result = yield poolRequest.query('SELECT id, name, role_id, password FROM usuarios WHERE email = @email');
                 const user = result.recordset[0];
                 if (!user) {
                     return this.handleError(response, 404, 'Usuário não encontrado');
@@ -57,9 +57,9 @@ class UserRepository {
                 if (!passwordMatch) {
                     return this.handleError(response, 400, 'Erro na autenticação');
                 }
-                const { id, name, userEmail, role, } = user;
-                const token = (0, jsonwebtoken_1.sign)({ id, name, userEmail, role }, process.env.SECRET, { expiresIn: "1d" });
-                response.status(200).json({ id, name, userEmail, role, token });
+                const { id, name, userEmail, role_id, } = user;
+                const token = (0, jsonwebtoken_1.sign)({ id, name, userEmail, role_id }, process.env.SECRET, { expiresIn: "1d" });
+                response.status(200).json({ id, name, userEmail, role_id, token });
             }
             catch (error) {
                 this.handleError(response, 400, error);
@@ -73,7 +73,7 @@ class UserRepository {
             }
             try {
                 const poolRequest = sqlserver_1.pool.request();
-                const result = yield poolRequest.query('SELECT id, name, email, role FROM usuarios ORDER BY name ASC');
+                const result = yield poolRequest.query('SELECT id, name, email, role_id FROM usuarios ORDER BY name ASC');
                 const usuarios = result.recordset;
                 response.status(200).json({ usuarios });
             }
@@ -86,7 +86,7 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { id } = request.params;
             if (id === '585') {
-                return this.handleError(response, 401, 'Ação não autorizada, contate o administrador do sistema');
+                return this.handleError(response, 401, 'Ação não autorizada, esse um usuario adminstrador padrão do sistema.');
             }
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
@@ -114,6 +114,9 @@ class UserRepository {
     criarPerfilAcesso(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { nome_perfil_acesso } = request.body;
+            if (nome_perfil_acesso.toLowerCase() === 'administrador' || nome_perfil_acesso.toLowerCase() === 'sem acesso') {
+                return this.handleError(response, 403, 'Esse é um perfil de acesso padrão do sistema, escolha outro nome');
+            }
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
             }
@@ -135,6 +138,22 @@ class UserRepository {
         });
     }
     getPerfilAcessos(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                const result = yield poolRequest.query('SELECT id_perfil_acesso, nome_perfil_acesso FROM perfil_acesso WHERE id_perfil_acesso NOT IN (1, 2) ORDER BY nome_perfil_acesso ASC');
+                const perfil_acessos = result.recordset;
+                response.status(200).json({ perfil_acessos });
+            }
+            catch (error) {
+                this.handleError(response, 400, error);
+            }
+        });
+    }
+    getPerfilAcessosUsuario(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
@@ -274,6 +293,29 @@ class UserRepository {
             }
             catch (error) {
                 this.handleError(response, 400, error);
+            }
+        });
+    }
+    updateUsuarioRole(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id_usuario, role_id } = request.body;
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('ID_USUARIO', id_usuario);
+                poolRequest.input('ROLE_ID', role_id);
+                const result = yield poolRequest.execute('uspAtualizarUsuarioRole');
+                if (result.returnValue === 0) {
+                    response.status(200).json({ message: 'Perfil de acesso ao usuario atualizado com sucesso!' });
+                }
+                else {
+                    this.handleError(response, 400, result.recordset[0].Retorno);
+                }
+            }
+            catch (error) {
+                this.handleError(response, 500, error);
             }
         });
     }
