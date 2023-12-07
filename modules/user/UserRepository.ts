@@ -341,6 +341,39 @@ class UserRepository {
     }
 
 
+    async consultarRoleIdUsuario(request: Request, response: Response) {
+        const { user_id } = request.body;
+
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
+        try {
+            const poolRequest = pool.request();
+            poolRequest.input('USER_ID', user_id);
+            const result = await poolRequest.execute('uspConsultarRoleId');
+
+            response.status(200).json(result.recordset[0]);
+
+        } catch (error) {
+            this.handleError(response, 500, error);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private handleError(response: Response, status: number, error: any) {
         response.status(status).json({ error: error.toString() });
     }

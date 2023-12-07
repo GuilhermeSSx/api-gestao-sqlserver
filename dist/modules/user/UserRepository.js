@@ -319,6 +319,23 @@ class UserRepository {
             }
         });
     }
+    consultarRoleIdUsuario(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { user_id } = request.body;
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('USER_ID', user_id);
+                const result = yield poolRequest.execute('uspConsultarRoleId');
+                response.status(200).json(result.recordset[0]);
+            }
+            catch (error) {
+                this.handleError(response, 500, error);
+            }
+        });
+    }
     handleError(response, status, error) {
         response.status(status).json({ error: error.toString() });
     }
