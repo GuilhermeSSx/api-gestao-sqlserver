@@ -66,10 +66,6 @@ userRoutes.post('/consultar-role-id', (request, response) => {
 //     userRepository.getUser(request, response);
 // })
 
-// Perfil de acesso ⬇️
-
-
-
 
 
 

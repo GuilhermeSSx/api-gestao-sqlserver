@@ -1,5 +1,6 @@
 import express from 'express';
 import { userRoutes } from './routes/user.routes';
+import { cadastrosRoutes } from './routes/cadastros.routes';
 import { config } from 'dotenv';
 
 config();
@@ -18,6 +19,7 @@ app.use(cors());
 
 app.use(express.json());
 app.use('/user', userRoutes);
+app.use('/cadastros', cadastrosRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bem-vindo à API JPNR Gestão!');
