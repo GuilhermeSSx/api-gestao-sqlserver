@@ -11,7 +11,8 @@ const pool = new ConnectionPool({
     database: process.env.DATABASE,
     port: Number(process.env.PORT_DATABASE),
     options: {
-        trustServerCertificate: true // Adicione esta linha para ignorar a verificação SSL
+        trustServerCertificate: true, // Adicione esta linha para ignorar a verificação SSL
+        encrypt: true
     }
 });
 
