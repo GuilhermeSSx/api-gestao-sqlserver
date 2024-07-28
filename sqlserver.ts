@@ -18,4 +18,4 @@ const pool = new ConnectionPool({
 
 export { pool };
 
-// MUDADO PARA O GOOGLE CLOUD SQLSERVER
+// Atualmente sendo utiliza DB Azure

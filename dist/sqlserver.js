@@ -11,8 +11,9 @@ const pool = new mssql_1.ConnectionPool({
     database: process.env.DATABASE,
     port: Number(process.env.PORT_DATABASE),
     options: {
-        trustServerCertificate: true // Adicione esta linha para ignorar a verificação SSL
+        trustServerCertificate: true, // Adicione esta linha para ignorar a verificação SSL
+        encrypt: true
     }
 });
 exports.pool = pool;
-// MUDADO PARA O GOOGLE CLOUD SQLSERVER
+// Atualmente sendo utiliza DB Azure
