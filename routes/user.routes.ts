@@ -50,7 +50,7 @@ userRoutes.put('/update-acesso-funcionalidade', login, (request, response) => {
     userRepository.updateAcessoFuncionalidade(request, response);
 })
 
-userRoutes.post('/get-usuario-filtrado', login, (request, response) => {
+userRoutes.post('/get-usuario-filtrado', (request, response) => {
     userRepository.UsuariosFiltrados(request, response);
 })
 

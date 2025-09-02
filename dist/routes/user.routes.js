@@ -41,7 +41,7 @@ userRoutes.put('/update-acesso-modulo', login_1.login, (request, response) => {
 userRoutes.put('/update-acesso-funcionalidade', login_1.login, (request, response) => {
     userRepository.updateAcessoFuncionalidade(request, response);
 });
-userRoutes.post('/get-usuario-filtrado', login_1.login, (request, response) => {
+userRoutes.post('/get-usuario-filtrado', (request, response) => {
     userRepository.UsuariosFiltrados(request, response);
 });
 userRoutes.put('/update-usuario-role', login_1.login, (request, response) => {
