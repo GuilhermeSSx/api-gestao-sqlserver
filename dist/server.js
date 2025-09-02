@@ -9,6 +9,7 @@ const cadastros_routes_1 = require("./routes/cadastros.routes");
 const favorecidos_routes_1 = require("./routes/favorecidos.routes");
 const dotenv_1 = require("dotenv");
 const cors_1 = __importDefault(require("cors"));
+const login_1 = require("./middleware/login");
 (0, dotenv_1.config)();
 const app = (0, express_1.default)();
 const corsOptions = {
@@ -16,8 +17,9 @@ const corsOptions = {
     optionsSuccessStatus: 200,
     allowedHeaders: ['Content-Type', 'Authorization']
 };
-app.use((0, cors_1.default)(corsOptions)); // Apenas a configuração com o pacote cors()
+app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
+app.use(login_1.login);
 app.use('/user', user_routes_1.userRoutes);
 app.use('/cadastros', cadastros_routes_1.cadastrosRoutes);
 app.use('/favorecidos', favorecidos_routes_1.favorecidosRoutes);
