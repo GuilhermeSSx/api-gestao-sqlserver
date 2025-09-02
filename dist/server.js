@@ -11,8 +11,28 @@ const dotenv_1 = require("dotenv");
 const cors_1 = __importDefault(require("cors"));
 (0, dotenv_1.config)();
 const app = (0, express_1.default)();
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
+if (!allowedOrigin) {
+    throw new Error('A variável de ambiente ALLOWED_ORIGIN não está definida.');
+}
+const allowedOriginHostname = new URL(allowedOrigin).hostname;
+// Adicione o tipo : CorsOptions ao seu objeto de configuração
 const corsOptions = {
-    origin: process.env.ALLOWED_ORIGIN,
+    // Agora use os tipos corretos para os parâmetros
+    origin: (origin, callback) => {
+        // Permite requisições sem 'origin'
+        if (!origin) {
+            return callback(null, true);
+        }
+        const requestHostname = new URL(origin).hostname;
+        if (origin === allowedOrigin || requestHostname.endsWith(`.${allowedOriginHostname}`)) {
+            callback(null, true);
+        }
+        else {
+            const error = new Error('Não permitido pela política de CORS');
+            callback(error);
+        }
+    },
     optionsSuccessStatus: 200,
     allowedHeaders: ['Content-Type', 'Authorization']
 };
