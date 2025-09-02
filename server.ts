@@ -4,7 +4,6 @@ import { cadastrosRoutes } from './routes/cadastros.routes';
 import { favorecidosRoutes } from './routes/favorecidos.routes';
 import { config } from 'dotenv';
 import cors from 'cors';
-import { login } from './middleware/login';
 
 config();
 
@@ -18,8 +17,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-
-app.use(login);
 
 app.use('/user', userRoutes);
 app.use('/cadastros', cadastrosRoutes);
