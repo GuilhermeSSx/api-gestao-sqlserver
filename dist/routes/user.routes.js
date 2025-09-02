@@ -47,6 +47,6 @@ userRoutes.post('/get-usuario-filtrado', login_1.login, (request, response) => {
 userRoutes.put('/update-usuario-role', login_1.login, (request, response) => {
     userRepository.updateUsuarioRole(request, response);
 });
-userRoutes.post('/consultar-role-id', login_1.login, (request, response) => {
+userRoutes.post('/consultar-role-id', (request, response) => {
     userRepository.consultarRoleIdUsuario(request, response);
 });

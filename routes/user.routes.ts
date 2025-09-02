@@ -58,7 +58,7 @@ userRoutes.put('/update-usuario-role', login, (request, response) => {
     userRepository.updateUsuarioRole(request, response);
 })
 
-userRoutes.post('/consultar-role-id', login, (request, response) => {
+userRoutes.post('/consultar-role-id', (request, response) => {
     userRepository.consultarRoleIdUsuario(request, response);
 })
 
