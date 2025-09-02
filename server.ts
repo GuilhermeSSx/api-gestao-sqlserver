@@ -1,48 +1,24 @@
 import express from 'express';
-import { userRoutes } from './routes/user.routes';
+import { config } from 'dotenv';
+import cors from 'cors';
 import { cadastrosRoutes } from './routes/cadastros.routes';
 import { favorecidosRoutes } from './routes/favorecidos.routes';
-import { config } from 'dotenv';
-import cors, { CorsOptions } from 'cors';
-
+import { userRoutes } from './routes/user.routes';
 
 config();
 
 const app = express();
 
-const allowedOrigin = process.env.ALLOWED_ORIGIN;
+app.use(cors());
 
-if (!allowedOrigin) {
-    throw new Error('A variável de ambiente ALLOWED_ORIGIN não está definida.');
-}
-
-const allowedOriginHostname = new URL(allowedOrigin).hostname;
-
-// Adicione o tipo : CorsOptions ao seu objeto de configuração
-const corsOptions: CorsOptions = {
-    // Agora use os tipos corretos para os parâmetros
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        
-        // Permite requisições sem 'origin'
-        if (!origin) {
-            return callback(null, true);
-        }
-
-        const requestHostname = new URL(origin).hostname;
-
-        if (origin === allowedOrigin || requestHostname.endsWith(`.${allowedOriginHostname}`)) {
-            callback(null, true);
-        } else {
-            const error = new Error('Não permitido pela política de CORS');
-            callback(error);
-        }
-    },
-    optionsSuccessStatus: 200,
-    allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
 app.use(express.json());
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "http://localhost:4000");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    next();
+});
 
 app.use('/user', userRoutes);
 app.use('/cadastros', cadastrosRoutes);
@@ -52,7 +28,6 @@ app.get('/', (req, res) => {
     res.send('Bem-vindo à API de Gestão!');
 });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, function () {
-    console.log(`[ server start : port ${PORT} - OK ]`);
+app.listen(4000, () => {
+    console.log("[ server start : port 4000 - OK ]");
 });
