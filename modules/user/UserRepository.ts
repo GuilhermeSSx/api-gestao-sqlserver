@@ -73,7 +73,7 @@ class UserRepository {
         }
         try {
             const poolRequest = pool.request();
-            const result = await poolRequest.query('SELECT id, name, email, role_id FROM usuarios ORDER BY name ASC');
+            const result = await poolRequest.query('SELECT id, name, email, role_id, role_name FROM usuarios ORDER BY name ASC');
             const usuarios = result.recordset;
 
             response.status(200).json({ usuarios });
