@@ -309,7 +309,7 @@ class UserRepository {
             const result = await poolRequest.execute('uspFiltrarUsuarios');
             const usuarios_filtrados = result.recordset;
 
-            response.status(200).json( { usuarios_filtrados } );
+            response.status(200).json({ usuarios_filtrados });
 
         } catch (error) {
             this.handleError(response, 400, error);
@@ -319,27 +319,34 @@ class UserRepository {
     async editUsuario(request: Request, response: Response) {
         const { id_usuario, nome, email, password, role_id } = request.body;
 
-        if (!pool.connected) {
-            await pool.connect();
-        }
-
         try {
+            if (!pool.connected) {
+                await pool.connect();
+            }
+
             const poolRequest = pool.request();
             poolRequest.input('ID_USUARIO', id_usuario);
             poolRequest.input('NOME', nome);
             poolRequest.input('EMAIL', email);
             poolRequest.input('PASSWORD', password);
             poolRequest.input('ROLE_ID', role_id);
+
             const result = await poolRequest.execute('uspEditUsuario');
 
             if (result.returnValue === 0) {
                 response.status(200).json({ message: `Usuario ${nome} atualizado com sucesso!` });
             } else {
-                this.handleError(response, 400, result.recordset[0].Retorno);
+                const errorMsg = result.recordset && result.recordset[0] ? result.recordset[0].Retorno : 'Erro desconhecido';
+                this.handleError(response, 400, errorMsg);
             }
-
         } catch (error) {
-            this.handleError(response, 500, error);
+            if (error instanceof Error) {
+                console.error('Erro em editUsuario:', error.message);
+                this.handleError(response, 500, error.message);
+            } else {
+                console.error('Erro desconhecido em editUsuario:', error);
+                this.handleError(response, 500, 'Erro desconhecido');
+            }
         }
     }
 
