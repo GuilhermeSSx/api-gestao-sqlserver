@@ -316,8 +316,8 @@ class UserRepository {
         }
     }
 
-    async updateUsuarioRole(request: Request, response: Response) {
-        const { id_usuario, role_id } = request.body;
+    async editUsuario(request: Request, response: Response) {
+        const { id_usuario, nome, email, password, role_id } = request.body;
 
         if (!pool.connected) {
             await pool.connect();
@@ -326,11 +326,14 @@ class UserRepository {
         try {
             const poolRequest = pool.request();
             poolRequest.input('ID_USUARIO', id_usuario);
+            poolRequest.input('NOME', nome);
+            poolRequest.input('EMAIL', email);
+            poolRequest.input('PASSWORD', password);
             poolRequest.input('ROLE_ID', role_id);
-            const result = await poolRequest.execute('uspAtualizarUsuarioRole');
+            const result = await poolRequest.execute('uspAtualizarUsuario');
 
             if (result.returnValue === 0) {
-                response.status(200).json({ message: 'Perfil de acesso ao usuario atualizado com sucesso!' });
+                response.status(200).json({ message: 'Usuario '+ {nome} +' atualizado com sucesso!' });
             } else {
                 this.handleError(response, 400, result.recordset[0].Retorno);
             }
