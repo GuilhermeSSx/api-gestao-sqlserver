@@ -330,7 +330,7 @@ class UserRepository {
             poolRequest.input('EMAIL', email);
             poolRequest.input('PASSWORD', password);
             poolRequest.input('ROLE_ID', role_id);
-            const result = await poolRequest.execute('uspAtualizarUsuario');
+            const result = await poolRequest.execute('uspEditUsuario');
 
             if (result.returnValue === 0) {
                 response.status(200).json({ message: 'Usuario '+ {nome} +' atualizado com sucesso!' });
