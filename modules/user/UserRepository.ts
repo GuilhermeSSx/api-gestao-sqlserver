@@ -333,7 +333,7 @@ class UserRepository {
             const result = await poolRequest.execute('uspEditUsuario');
 
             if (result.returnValue === 0) {
-                response.status(200).json({ message: 'Usuario '+ {nome} +' atualizado com sucesso!' });
+                response.status(200).json({ message: `Usuario ${nome} atualizado com sucesso!` });
             } else {
                 this.handleError(response, 400, result.recordset[0].Retorno);
             }
