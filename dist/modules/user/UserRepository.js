@@ -111,173 +111,6 @@ class UserRepository {
             }
         });
     }
-    criarPerfilAcesso(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { nome_perfil_acesso } = request.body;
-            if (nome_perfil_acesso.toLowerCase() === 'administrador' || nome_perfil_acesso.toLowerCase() === 'sem acesso') {
-                return this.handleError(response, 403, 'Esse é um perfil de acesso padrão do sistema, escolha outro nome');
-            }
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('NOME_PERFIL_ACESSO', nome_perfil_acesso);
-                const result = yield poolRequest.execute('uspCriarPerfilAcesso');
-                if (result.returnValue === 0) {
-                    response.status(200).json({ message: 'Perfil de Acesso: ' + nome_perfil_acesso + ' criado com sucesso!' });
-                }
-                else {
-                    // console.log(result.recordset[0].Retorno);
-                    this.handleError(response, 400, result.recordset[0].Retorno);
-                }
-            }
-            catch (error) {
-                this.handleError(response, 500, error);
-            }
-        });
-    }
-    getPerfilAcessos(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                const result = yield poolRequest.query('SELECT id_perfil_acesso, nome_perfil_acesso FROM perfil_acesso WHERE id_perfil_acesso NOT IN (1, 2) ORDER BY nome_perfil_acesso ASC');
-                const perfil_acessos = result.recordset;
-                response.status(200).json({ perfil_acessos });
-            }
-            catch (error) {
-                this.handleError(response, 400, error);
-            }
-        });
-    }
-    getPerfilAcessosUsuario(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                const result = yield poolRequest.query('SELECT id_perfil_acesso, nome_perfil_acesso FROM perfil_acesso ORDER BY nome_perfil_acesso ASC');
-                const perfil_acessos = result.recordset;
-                response.status(200).json({ perfil_acessos });
-            }
-            catch (error) {
-                this.handleError(response, 400, error);
-            }
-        });
-    }
-    excluirPerfilAcesso(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { id_perfil_acesso } = request.body;
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
-                const result = yield poolRequest.execute('uspExcluirPerfilAcesso');
-                if (result.returnValue === 0) {
-                    response.status(200).json({ message: result.recordset[0].Retorno });
-                }
-                else {
-                    // console.log(result.recordset[0].Retorno);
-                    this.handleError(response, 400, result.recordset[0].Retorno);
-                }
-            }
-            catch (error) {
-                this.handleError(response, 500, error);
-            }
-        });
-    }
-    carregarPerfilAcesso(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { id_perfil_acesso } = request.body;
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('ID_PERFIL_ACESSO', id_perfil_acesso);
-                const result = yield poolRequest.execute('uspCarregarPerfilAcesso');
-                let modulos_acessos;
-                let funcionalidades_acessos;
-                if (Array.isArray(result.recordsets)) {
-                    // Se for um array, você pode acessar o índice '0' para obter os resultados
-                    modulos_acessos = result.recordsets[0];
-                    funcionalidades_acessos = result.recordsets[1];
-                }
-                else {
-                    // Caso contrário, é um objeto com índices de string, você pode acessar pelo nome
-                    modulos_acessos = result.recordsets['0'];
-                    funcionalidades_acessos = result.recordsets['1'];
-                }
-                if (result.returnValue === 0) {
-                    response.status(200).json({ modulos_acessos, funcionalidades_acessos });
-                }
-                else {
-                    this.handleError(response, 400, result.recordset[0].Retorno);
-                }
-            }
-            catch (error) {
-                this.handleError(response, 500, error);
-            }
-        });
-    }
-    updateAcessoModulo(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { ID_MODULO_ACESSO_LIST, ACESSO_LIST } = request.body;
-            if (ID_MODULO_ACESSO_LIST === '') {
-                return this.handleError(response, 401, 'Nenhum ou algum ID_MODULO_ACESSO_LIST não encontrado.');
-            }
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('ID_MODULO_ACESSO_LIST', ID_MODULO_ACESSO_LIST);
-                poolRequest.input('ACESSO_LIST', ACESSO_LIST);
-                const result = yield poolRequest.execute('uspAtualizarModuloAcesso');
-                if (result.returnValue === 0) {
-                    response.status(200).json({ message: 'Modulo Acesso atualizado com sucesso!' });
-                }
-                else {
-                    this.handleError(response, 400, result.recordset[0].Retorno);
-                }
-            }
-            catch (error) {
-                this.handleError(response, 500, error);
-            }
-        });
-    }
-    updateAcessoFuncionalidade(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { ID_FUNCIONALIDADE_ACESSO_LIST, ACESSO_LIST } = request.body;
-            if (ID_FUNCIONALIDADE_ACESSO_LIST === '') {
-                return this.handleError(response, 401, 'Nenhum ou algum ID_MODULO_ACESSO_LIST não encontrado.');
-            }
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('ID_FUNCIONALIDADE_ACESSO_LIST', ID_FUNCIONALIDADE_ACESSO_LIST);
-                poolRequest.input('ACESSO_LIST', ACESSO_LIST);
-                const result = yield poolRequest.execute('uspAtualizarFuncionalidadeAcesso');
-                if (result.returnValue === 0) {
-                    response.status(200).json({ message: 'Funcionalidade Acesso atualizado com sucesso!' });
-                }
-                else {
-                    this.handleError(response, 400, result.recordset[0].Retorno);
-                }
-            }
-            catch (error) {
-                this.handleError(response, 500, error);
-            }
-        });
-    }
     UsuariosFiltrados(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { search } = request.body;
@@ -296,19 +129,22 @@ class UserRepository {
             }
         });
     }
-    updateUsuarioRole(request, response) {
+    editUsuario(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id_usuario, role_id } = request.body;
+            const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
             }
             try {
                 const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('ID_USUARIO', id_usuario);
-                poolRequest.input('ROLE_ID', role_id);
-                const result = yield poolRequest.execute('uspAtualizarUsuarioRole');
+                poolRequest.input('ID', ID);
+                poolRequest.input('NAME', NAME);
+                poolRequest.input('EMAIL', EMAIL);
+                poolRequest.input('PASSWORD', PASSWORD);
+                poolRequest.input('ROLE_ID', ROLE_ID);
+                const result = yield poolRequest.execute('uspEditUsuario');
                 if (result.returnValue === 0) {
-                    response.status(200).json({ message: 'Perfil de acesso ao usuario atualizado com sucesso!' });
+                    response.status(200).json({ message: `Usuario ${NAME} atualizado com sucesso!` });
                 }
                 else {
                     this.handleError(response, 400, result.recordset[0].Retorno);

@@ -167,8 +167,6 @@ class UserRepository {
         }
     }
 
-
-
     async consultarRoleIdUsuario(request: Request, response: Response) {
         const { user_id } = request.body;
 
