@@ -142,10 +142,11 @@ class UserRepository {
     async editUsuario(request: Request, response: Response) {
         const { id_usuario, nome, email, password, role_id } = request.body;
 
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
         try {
-            if (!pool.connected) {
-                await pool.connect();
-            }
 
             const poolRequest = pool.request();
             poolRequest.input('ID_USUARIO', id_usuario);
@@ -159,19 +160,14 @@ class UserRepository {
             if (result.returnValue === 0) {
                 response.status(200).json({ message: `Usuario ${nome} atualizado com sucesso!` });
             } else {
-                const errorMsg = result.recordset && result.recordset[0] ? result.recordset[0].Retorno : 'Erro desconhecido';
-                this.handleError(response, 400, errorMsg);
+                this.handleError(response, 400, result.recordset[0].Retorno);
             }
         } catch (error) {
-            if (error instanceof Error) {
-                console.error('Erro em editUsuario:', error.message);
-                this.handleError(response, 500, error.message);
-            } else {
-                console.error('Erro desconhecido em editUsuario:', error);
-                this.handleError(response, 500, 'Erro desconhecido');
-            }
+            this.handleError(response, 500, error);
         }
     }
+
+
 
     async consultarRoleIdUsuario(request: Request, response: Response) {
         const { user_id } = request.body;
