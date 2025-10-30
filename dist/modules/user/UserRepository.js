@@ -66,6 +66,33 @@ class UserRepository {
             }
         });
     }
+    editUsuario(request, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
+            const passwordHash = yield (0, bcrypt_1.hash)(PASSWORD, 10);
+            if (!sqlserver_1.pool.connected) {
+                yield sqlserver_1.pool.connect();
+            }
+            try {
+                const poolRequest = sqlserver_1.pool.request();
+                poolRequest.input('ID', ID);
+                poolRequest.input('NAME', NAME);
+                poolRequest.input('EMAIL', EMAIL);
+                poolRequest.input('PASSWORD', passwordHash);
+                poolRequest.input('ROLE_ID', ROLE_ID);
+                const result = yield poolRequest.execute('uspEditUsuario');
+                if (result.returnValue === 0) {
+                    response.status(200).json({ message: `Usuario ${NAME} atualizado com sucesso!` });
+                }
+                else {
+                    this.handleError(response, 400, result.recordset[0].Retorno);
+                }
+            }
+            catch (error) {
+                this.handleError(response, 500, error);
+            }
+        });
+    }
     getUsers(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!sqlserver_1.pool.connected) {
@@ -126,32 +153,6 @@ class UserRepository {
             }
             catch (error) {
                 this.handleError(response, 400, error);
-            }
-        });
-    }
-    editUsuario(request, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
-            if (!sqlserver_1.pool.connected) {
-                yield sqlserver_1.pool.connect();
-            }
-            try {
-                const poolRequest = sqlserver_1.pool.request();
-                poolRequest.input('ID', ID);
-                poolRequest.input('NAME', NAME);
-                poolRequest.input('EMAIL', EMAIL);
-                poolRequest.input('PASSWORD', PASSWORD);
-                poolRequest.input('ROLE_ID', ROLE_ID);
-                const result = yield poolRequest.execute('uspEditUsuario');
-                if (result.returnValue === 0) {
-                    response.status(200).json({ message: `Usuario ${NAME} atualizado com sucesso!` });
-                }
-                else {
-                    this.handleError(response, 400, result.recordset[0].Retorno);
-                }
-            }
-            catch (error) {
-                this.handleError(response, 500, error);
             }
         });
     }

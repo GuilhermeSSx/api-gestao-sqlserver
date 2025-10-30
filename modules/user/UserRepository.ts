@@ -4,6 +4,7 @@ import { sign } from 'jsonwebtoken';
 import { pool } from '../../sqlserver';
 
 class UserRepository {
+
     async cadastrar(request: Request, response: Response) {
         const { name, email, password, role_id } = request.body;
         const passwordHash = await hash(password, 10);
@@ -63,6 +64,35 @@ class UserRepository {
             response.status(200).json({ id, name, userEmail, role_id, token });
         } catch (error) {
             this.handleError(response, 400, error);
+        }
+    }
+
+    async editUsuario(request: Request, response: Response) {
+        const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
+        const passwordHash = await hash(PASSWORD, 10);
+
+        if (!pool.connected) {
+            await pool.connect();
+        }
+
+        try {
+
+            const poolRequest = pool.request();
+            poolRequest.input('ID', ID);
+            poolRequest.input('NAME', NAME);
+            poolRequest.input('EMAIL', EMAIL);
+            poolRequest.input('PASSWORD', passwordHash);
+            poolRequest.input('ROLE_ID', ROLE_ID);
+
+            const result = await poolRequest.execute('uspEditUsuario');
+
+            if (result.returnValue === 0) {
+                response.status(200).json({ message: `Usuario ${NAME} atualizado com sucesso!` });
+            } else {
+                this.handleError(response, 400, result.recordset[0].Retorno);
+            }
+        } catch (error) {
+            this.handleError(response, 500, error);
         }
     }
 
@@ -139,34 +169,6 @@ class UserRepository {
         }
     }
 
-    async editUsuario(request: Request, response: Response) {
-        const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
-
-        if (!pool.connected) {
-            await pool.connect();
-        }
-
-        try {
-
-            const poolRequest = pool.request();
-            poolRequest.input('ID', ID);
-            poolRequest.input('NAME', NAME);
-            poolRequest.input('EMAIL', EMAIL);
-            poolRequest.input('PASSWORD', PASSWORD);
-            poolRequest.input('ROLE_ID', ROLE_ID);
-
-            const result = await poolRequest.execute('uspEditUsuario');
-
-            if (result.returnValue === 0) {
-                response.status(200).json({ message: `Usuario ${NAME} atualizado com sucesso!` });
-            } else {
-                this.handleError(response, 400, result.recordset[0].Retorno);
-            }
-        } catch (error) {
-            this.handleError(response, 500, error);
-        }
-    }
-
     async consultarRoleIdUsuario(request: Request, response: Response) {
         const { user_id } = request.body;
 
@@ -191,8 +193,5 @@ class UserRepository {
     }
 
 }
-
-
-
 
 export { UserRepository };
