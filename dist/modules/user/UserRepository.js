@@ -69,7 +69,10 @@ class UserRepository {
     editUsuario(request, response) {
         return __awaiter(this, void 0, void 0, function* () {
             const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
-            const passwordHash = yield (0, bcrypt_1.hash)(PASSWORD, 10);
+            let passwordHash = null;
+            if (PASSWORD && PASSWORD.trim() !== "") {
+                passwordHash = yield (0, bcrypt_1.hash)(PASSWORD, 10);
+            }
             if (!sqlserver_1.pool.connected) {
                 yield sqlserver_1.pool.connect();
             }
@@ -78,7 +81,7 @@ class UserRepository {
                 poolRequest.input('ID', ID);
                 poolRequest.input('NAME', NAME);
                 poolRequest.input('EMAIL', EMAIL);
-                poolRequest.input('PASSWORD', passwordHash);
+                poolRequest.input('PASSWORD', passwordHash); // pode ser null
                 poolRequest.input('ROLE_ID', ROLE_ID);
                 const result = yield poolRequest.execute('uspEditUsuario');
                 if (result.returnValue === 0) {
