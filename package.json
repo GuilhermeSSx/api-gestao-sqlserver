@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "dev": "ts-node-dev src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
-  },
+"scripts": {
+  "dev": "ts-node-dev src/server.ts",
+  "build": "rimraf dist && tsc",
+  "start": "node dist/server.js"
+},
   "keywords": [],
   "author": "GuilhermeSSx",
   "license": "ISC",
