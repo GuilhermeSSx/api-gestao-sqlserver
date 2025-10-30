@@ -70,21 +70,27 @@ class UserRepository {
     async editUsuario(request: Request, response: Response) {
         const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
 
-        let passwordHash = null;
-        if (PASSWORD && PASSWORD.trim() !== "") {
-            passwordHash = await hash(PASSWORD, 10);
-        }
-
-        if (!pool.connected) {
-            await pool.connect();
-        }
-
         try {
+            // Só gera o hash se a senha foi informada e não está vazia
+            let passwordHash: string | null = null;
+            if (PASSWORD && PASSWORD.trim() !== "") {
+                passwordHash = await hash(PASSWORD, 10);
+            }
+
+            if (!pool.connected) {
+                await pool.connect();
+            }
+
             const poolRequest = pool.request();
             poolRequest.input('ID', ID);
             poolRequest.input('NAME', NAME);
             poolRequest.input('EMAIL', EMAIL);
-            poolRequest.input('PASSWORD', passwordHash);  // pode ser null
+
+            // Só adiciona input para password se hash foi gerado (senha alterada)
+            if (passwordHash !== null) {
+                poolRequest.input('PASSWORD', passwordHash);
+            }
+
             poolRequest.input('ROLE_ID', ROLE_ID);
 
             const result = await poolRequest.execute('uspEditUsuario');
@@ -98,6 +104,7 @@ class UserRepository {
             this.handleError(response, 500, error);
         }
     }
+
     async getUsers(request: Request, response: Response) {
 
         if (!pool.connected) {
