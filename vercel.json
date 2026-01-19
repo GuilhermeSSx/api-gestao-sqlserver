@@ -2,7 +2,8 @@
   "version": 2,
   "functions": {
     "dist/server.js": {
-      "includeFiles": "dist/**"
+      "memory": 1024,
+      "maxDuration": 10
     }
   },
   "rewrites": [
