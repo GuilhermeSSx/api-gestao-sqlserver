@@ -126,9 +126,8 @@ class UserRepository {
     async UsuariosFiltrados(request: Request, response: Response) {
         const { search } = request.body;
         try {
-            const usuarios_filtrados = await prisma.$queryRawUnsafe(
-                `EXEC uspFiltrarUsuarios @SEARCH = ?`, search
-            );
+            // Usando template literal para passar o parâmetro de forma segura
+            const usuarios_filtrados = await prisma.$queryRaw`EXEC uspFiltrarUsuarios @SEARCH = ${search}`;
 
             return response.status(200).json({ usuarios_filtrados });
         } catch (error) {

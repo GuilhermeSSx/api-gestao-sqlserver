@@ -123,7 +123,8 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { search } = request.body;
             try {
-                const usuarios_filtrados = yield prisma_1.prisma.$queryRawUnsafe(`EXEC uspFiltrarUsuarios @SEARCH = ?`, search);
+                // Usando template literal para passar o parâmetro de forma segura
+                const usuarios_filtrados = yield prisma_1.prisma.$queryRaw `EXEC uspFiltrarUsuarios @SEARCH = ${search}`;
                 return response.status(200).json({ usuarios_filtrados });
             }
             catch (error) {
