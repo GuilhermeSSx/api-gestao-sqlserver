@@ -74,8 +74,15 @@ class UserRepository {
                 if (PASSWORD && PASSWORD.trim() !== "") {
                     passwordHash = yield (0, bcrypt_1.hash)(PASSWORD, 10);
                 }
-                // Executa a procedure de edição
-                yield prisma_1.prisma.$queryRawUnsafe(`EXEC uspEditUsuario @ID = ?, @NAME = ?, @EMAIL = ?, @PASSWORD = ?, @ROLE_ID = ?`, ID, NAME, EMAIL, passwordHash, ROLE_ID);
+                // Executa a procedure de edição usando tagged template literals
+                yield prisma_1.prisma.$queryRaw `
+            EXEC uspEditUsuario 
+                @ID = ${ID}, 
+                @NAME = ${NAME}, 
+                @EMAIL = ${EMAIL}, 
+                @PASSWORD = ${passwordHash}, 
+                @ROLE_ID = ${ROLE_ID}
+        `;
                 return response.status(200).json({ message: `Usuario ${NAME} atualizado com sucesso!` });
             }
             catch (error) {
