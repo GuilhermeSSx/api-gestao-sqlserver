@@ -1,9 +1,8 @@
-import express from 'express';
 import { config } from 'dotenv';
+import express from 'express';
 import cors from 'cors';
-import { cadastrosRoutes } from './routes/cadastros.routes';
-import { favorecidosRoutes } from './routes/favorecidos.routes';
 import { userRoutes } from './routes/user.routes';
+// import { getUsers } from "./modules/user/UserRepository";
 
 config();
 
@@ -21,12 +20,17 @@ app.use((req, res, next) => {
 });
 
 app.use('/user', userRoutes);
-app.use('/cadastros', cadastrosRoutes);
-app.use('/favorecidos', favorecidosRoutes);
 
 app.get('/', (req, res) => {
     res.send('Bem-vindo à API de Gestão!');
 });
+
+// async function start() {
+//     const results = await getUsers();
+//     console.log(results);
+// }
+
+// start();
 
 app.listen(4000, () => {
     console.log("[ server start : port 4000 - OK ]");
