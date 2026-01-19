@@ -139,9 +139,8 @@ class UserRepository {
     async consultarRoleIdUsuario(request: Request, response: Response) {
         const { user_id } = request.body;
         try {
-            const result: any = await prisma.$queryRawUnsafe(
-                `EXEC uspConsultarRoleId @USER_ID = ?`, user_id
-            );
+            // Note que usamos ` ` (crase) e passamos a variável direto no ${}
+            const result: any = await prisma.$queryRaw`EXEC uspConsultarRoleId @USER_ID = ${user_id}`;
 
             return response.status(200).json(result[0]);
         } catch (error) {

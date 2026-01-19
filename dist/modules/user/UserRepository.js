@@ -135,7 +135,8 @@ class UserRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const { user_id } = request.body;
             try {
-                const result = yield prisma_1.prisma.$queryRawUnsafe(`EXEC uspConsultarRoleId @USER_ID = ?`, user_id);
+                // Note que usamos ` ` (crase) e passamos a variável direto no ${}
+                const result = yield prisma_1.prisma.$queryRaw `EXEC uspConsultarRoleId @USER_ID = ${user_id}`;
                 return response.status(200).json(result[0]);
             }
             catch (error) {
