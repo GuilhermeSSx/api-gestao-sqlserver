@@ -2,16 +2,17 @@
   "name": "jpnr-gestao-sqlserver",
   "version": "1.0.0",
   "description": "API de Gestão com SQL Server e Prisma",
-  "main": "server.ts",
+  "main": "api/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "build": "prisma generate && rimraf dist && tsc",
+    "vercel-build": "prisma generate && rimraf dist && tsc",
     "start": "node dist/server.js",
     "postinstall": "prisma generate"
   },
-  "keywords": [],
-  "author": "GuilhermeSSx",
-  "license": "ISC",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@prisma/adapter-mssql": "^7.2.0",
     "@prisma/client": "^7.2.0",

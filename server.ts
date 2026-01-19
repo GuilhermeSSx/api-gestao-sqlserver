@@ -2,14 +2,12 @@ import { config } from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { userRoutes } from './routes/user.routes';
-// import { getUsers } from "./modules/user/UserRepository";
 
 config();
 
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -25,13 +23,16 @@ app.get('/', (req, res) => {
     res.send('Bem-vindo à API de Gestão!');
 });
 
-// async function start() {
-//     const results = await getUsers();
-//     console.log(results);
-// }
+// --- AJUSTE PARA VERCEL ---
 
-// start();
+// Só inicia o listen se não estiver em ambiente de produção (Vercel)
+// Isso evita que a função serverless fique "pendurada" tentando abrir uma porta
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, () => {
+        console.log(`[ server start : port ${PORT} - OK ]`);
+    });
+}
 
-app.listen(4000, () => {
-    console.log("[ server start : port 4000 - OK ]");
-});
+// OBRIGATÓRIO: Exportar para que o api/index.js consiga importar
+export default app;
