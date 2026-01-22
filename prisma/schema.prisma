@@ -3,51 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
-}
-
-model categorias {
-  id_categoria   Int           @id(map: "PK_categorias") @default(autoincrement())
-  nome_categoria String?       @db.VarChar(50)
-  lancamentos    lancamentos[]
-}
-
-model centro_custo {
-  id_centro_custo   Int    @id(map: "PK_centro_custo") @default(autoincrement())
-  nome_centro_custo String @unique(map: "nome_centro_custo_UNIQUE") @db.VarChar(100)
-}
-
-model class_saida {
-  id_class_saida   Int    @id(map: "PK_class_saida") @default(autoincrement())
-  nome_class_saida String @unique(map: "nome_class_saida_UNIQUE") @db.VarChar(40)
-}
-
-model favorecidos {
-  id_favorecido Int           @id(map: "PK_favorecido") @default(autoincrement())
-  nome_fav      String        @db.VarChar(80)
-  email_fav     String?       @db.VarChar(100)
-  telefone      String?       @db.VarChar(16)
-  cpf_cnpj      String?       @db.VarChar(18)
-  endereco_fav  String?       @db.VarChar(140)
-  lancamentos   lancamentos[]
-}
-
-model lancamentos {
-  id_lancamento    Int          @id(map: "PK_lancamentos") @default(autoincrement())
-  data_lancamento  DateTime?    @db.DateTime
-  id_favorecido    Int?
-  id_categoria     Int?
-  forma_pagamento_ Int?         @map("forma_pagamento ")
-  valor            Decimal?     @db.Decimal(8, 2)
-  status           Int?
-  categorias       categorias?  @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction, map: "FK_lancamentos_categorias")
-  favorecidos      favorecidos? @relation(fields: [id_favorecido], references: [id_favorecido], onDelete: NoAction, onUpdate: NoAction, map: "FK_lancamentos_favorecidos")
+  provider = "postgresql"
 }
 
 model usuarios {
-  id       Int    @id(map: "PK_usuarios") @default(autoincrement())
-  name     String @unique(map: "NomeUnico") @db.VarChar(40)
-  email    String @unique(map: "EmailUnico") @db.VarChar(64)
-  password String @db.VarChar(60)
-  role_id  Int    @default(3, map: "DF_usuarios_role")
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  email      String    @unique
+  password   String
+  role_id    Int       @default(1)
+  tenant_id  Int
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now())
+  deleted_at DateTime?
+
+  @@index([tenant_id], map: "idx_usuarios_tenant")
 }

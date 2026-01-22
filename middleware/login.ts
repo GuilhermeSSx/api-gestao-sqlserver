@@ -1,13 +1,22 @@
 import { verify } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express'; // Tipos do Express
 
-const login = (req: any, res: any, next: any) => {
+export function login(req: Request, res: Response, next: NextFunction) {
+    const authToken = req.headers.authorization;
+
+    if (!authToken) {
+        return res.status(401).json({ message: 'Token está em falta.' });
+    }
+
+    // O header vem como "Bearer <token>", precisamos tirar a palavra "Bearer"
+    const [, token] = authToken.split(" ");
+
     try {
-        const decode = verify(req.headers.authorization, process.env.SECRET as string);
+        const decode = verify(token, process.env.SECRET as string);
+        // @ts-ignore - ou estender a tipagem do Express
         req.user = decode;
-        next();
-    } catch(error) {
-        return res.status(401).json({message: 'Não autorizado'});
+        return next();
+    } catch (error) {
+        return res.status(401).json({ message: 'Token inválido.' });
     }
 }
-
-export { login };

@@ -1,9 +1,12 @@
-import { defineConfig } from "prisma/config";
+import { defineConfig, env } from "prisma/config";
+import "dotenv/config";
 
 export default defineConfig({
-  // Se o seu seed for via TSX, isso é ótimo manter aqui
+  schema: "prisma/schema.prisma",
   migrations: {
-    seed: 'tsx prisma/seed.ts',
+    path: "prisma/migrations",
   },
-  // O schema e a URL o Prisma 7 já detecta automaticamente do schema.prisma e .env
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
 });

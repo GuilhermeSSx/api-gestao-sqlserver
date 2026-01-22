@@ -1,12 +1,11 @@
 {
   "name": "simples-agil-api",
   "version": "1.0.0",
-  "description": "API de Gestão com SQL Server e Prisma",
-  "main": "api/index.js",
+  "description": "API de Gestão com PostgreSQL e Prisma",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only server.ts",
-    "build": "prisma generate && rimraf dist && tsc",
-    "vercel-build": "prisma generate && rimraf dist && tsc",
+    "dev": "tsx watch server.ts",
+    "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
     "postinstall": "prisma generate"
   },
@@ -14,35 +13,35 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@prisma/adapter-mssql": "^7.2.0",
-    "@prisma/config": "^7.2.0",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mssql": "^12.2.0"
+    "pg": "^8.17.2"
   },
   "devDependencies": {
-    "@prisma/client": "^7.3.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.7",
-    "@types/node": "^20.17.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.11.24",
+    "@types/pg": "^8.16.0",
     "prisma": "^7.3.0",
-    "rimraf": "^6.0.1",
+    "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.7.3"
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3"
   },
   "overrides": {
     "lodash": "4.17.23",
     "@chevrotain/gast": {
-        "lodash": "4.17.23"
+      "lodash": "4.17.23"
     },
     "chevrotain": {
-        "lodash": "4.17.23"
+      "lodash": "4.17.23"
     }
   }
 }

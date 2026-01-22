@@ -5,37 +5,17 @@ import { UserRepository } from "../modules/user/UserRepository";
 const userRoutes = Router();
 const userRepository = new UserRepository();
 
-// rotas
-userRoutes.post('/sign-up', (request, response) => {
-    userRepository.cadastrar(request, response);
-})
+// --- Rotas Públicas ---
+userRoutes.post('/sign-up', (req, res) => userRepository.cadastrar(req, res));
+userRoutes.post('/sign-in', (req, res) => userRepository.login(req, res));
 
-userRoutes.post('/sign-in', (request, response) => {
-    userRepository.login(request, response);
-})
+// --- Rotas Privadas (Protegidas pelo middleware login) ---
+// Adicionei o login nestas duas rotas por segurança. Se precisarem ser públicas, pode remover.
+userRoutes.post('/get-usuario-filtrado', login, (req, res) => userRepository.UsuariosFiltrados(req, res));
+userRoutes.post('/consultar-role-id', login, (req, res) => userRepository.consultarRoleIdUsuario(req, res));
 
-userRoutes.get('/get-users', login, (request, response) => {
-    userRepository.getUsers(request, response);
-})
-
-userRoutes.delete('/delete-user/:id', login, (request, response) => {
-    userRepository.deleteUser(request, response);
-})
-
-userRoutes.post('/get-usuario-filtrado', (request, response) => {
-    userRepository.UsuariosFiltrados(request, response);
-})
-
-userRoutes.put('/edit-usuario', login, (request, response) => {
-    userRepository.editUsuario(request, response);
-})
-
-userRoutes.post('/consultar-role-id', (request, response) => {
-    userRepository.consultarRoleIdUsuario(request, response);
-})
-
-// userRoutes.get('/get-user', login, (request, response) => {
-//      userRepository.getUser(request, response);
-// })
+userRoutes.get('/get-users', login, (req, res) => userRepository.getUsers(req, res));
+userRoutes.delete('/delete-user/:id', login, (req, res) => userRepository.deleteUser(req, res));
+userRoutes.put('/edit-usuario', login, (req, res) => userRepository.editUsuario(req, res));
 
 export { userRoutes };
