@@ -195,6 +195,7 @@ class UserRepository {
 
     async consultarRoleIdUsuario(request: Request, response: Response) {
         const { user_id } = request.body;
+
         try {
             const user = await prisma.usuarios.findUnique({
                 where: { id: Number(user_id) },
@@ -203,7 +204,8 @@ class UserRepository {
 
             if (!user) return response.status(404).json({ message: 'Usuário não encontrado' });
 
-            return response.status(200).json(user);
+            return response.status(200).json(user.role_id);
+
         } catch (error) {
             return response.status(500).json({ message: 'Erro ao consultar Role ID.' });
         }
