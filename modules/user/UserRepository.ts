@@ -195,7 +195,11 @@ class UserRepository {
     }
 
     async consultarRoleIdUsuario(request: Request, response: Response) {
+        // Verifique se o nome aqui é exatamente 'user_id'
         const { user_id } = request.body;
+
+        // DEBUG: Adicione esse log na sua API para ver o que chega lá
+        console.log("Recebido na API:", request.body);
 
         try {
             const user = await prisma.usuarios.findUnique({
@@ -205,10 +209,10 @@ class UserRepository {
 
             if (!user) return response.status(404).json({ message: 'Usuário não encontrado' });
 
+            // Retornamos apenas o número
             return response.status(200).json(user.role_id);
-
         } catch (error) {
-            return response.status(500).json({ message: 'Erro ao consultar Role ID.' });
+            return response.status(500).json({ message: 'Erro interno.' });
         }
     }
 }
