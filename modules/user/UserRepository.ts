@@ -198,9 +198,6 @@ class UserRepository {
         // Verifique se o nome aqui é exatamente 'user_id'
         const { user_id } = request.body;
 
-        // DEBUG: Adicione esse log na sua API para ver o que chega lá
-        console.log("Recebido na API:", request.body);
-
         try {
             const user = await prisma.usuarios.findUnique({
                 where: { id: Number(user_id) },
