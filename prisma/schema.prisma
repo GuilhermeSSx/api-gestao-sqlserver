@@ -7,15 +7,17 @@ datasource db {
 }
 
 model usuarios {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique
-  email      String    @unique
-  password   String
-  role_id    Int       @default(1)
-  tenant_id  Int
-  created_at DateTime  @default(now())
-  updated_at DateTime  @default(now())
-  deleted_at DateTime?
+  id          Int       @id @default(autoincrement())
+  name        String    // Removido @unique
+  email       String    // Removido @unique
+  password    String
+  role_id     Int       @default(1)
+  tenant_id   Int
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  deleted_at  DateTime?
 
-  @@index([tenant_id], map: "idx_usuarios_tenant")
+  // Adicione isso para o Prisma reconhecer os índices que você criou no SQL
+  @@index([email], map: "idx_usuarios_email_ativo")
+  @@index([name], map: "idx_usuarios_name_ativo")
 }

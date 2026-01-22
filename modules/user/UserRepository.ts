@@ -11,7 +11,6 @@ export function getUsers() {
 class UserRepository {
 
     async cadastrar(request: Request, response: Response) {
-        // Adicionei tenant_id aqui caso venha do front, ou definimos padrão
         const { name, email, password, role_id, tenant_id } = request.body;
 
         try {
@@ -23,8 +22,6 @@ class UserRepository {
                     email,
                     password: passwordHash,
                     role_id: Number(role_id),
-                    // Como definimos tenant_id NOT NULL no banco, precisamos passar algo.
-                    // Se você ainda não tem login, assumimos o cliente 1 por enquanto.
                     tenant_id: tenant_id ? Number(tenant_id) : 1
                 }
             });
@@ -32,22 +29,64 @@ class UserRepository {
             return response.status(200).json({ message: 'Usuário criado com sucesso!' });
 
         } catch (error: any) {
-            // Tratamento de Erro do Prisma para PostgreSQL
             if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                // O Postgres retorna qual campo falhou dentro de meta.target
-                const target = error.meta?.target as string[];
+                // Verificamos tanto o target quanto a mensagem para cobrir o índice parcial do Postgres
+                const target = error.meta?.target as string[] || [];
+                const errorMessage = error.message || "";
 
-                if (target && target.includes('name')) {
-                    return response.status(409).json({ message: 'Este nome já está em uso.' });
+                const isEmailConflict = target.includes('email') || errorMessage.includes('idx_usuarios_email_ativo');
+                const isNameConflict = target.includes('name') || errorMessage.includes('idx_usuarios_name_ativo');
+
+                if (isNameConflict) {
+                    return response.status(409).json({ message: 'Este nome já está em uso por um usuário ativo.' });
                 }
-                if (target && target.includes('email')) {
-                    return response.status(409).json({ message: 'Este e-mail já está em uso.' });
+                if (isEmailConflict) {
+                    return response.status(409).json({ message: 'Este e-mail já está em uso por um usuário ativo.' });
                 }
 
-                return response.status(409).json({ message: 'Dados duplicados no sistema.' });
+                return response.status(409).json({ message: 'Dados duplicados em usuários ativos.' });
             }
 
             return response.status(400).json({ message: 'Erro ao cadastrar usuário.', erro: error.message });
+        }
+    }
+
+    async editUsuario(request: Request, response: Response) {
+        const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
+
+        try {
+            const dataToUpdate: any = {
+                name: NAME,
+                email: EMAIL,
+                role_id: Number(ROLE_ID),
+                updated_at: new Date()
+            };
+
+            if (PASSWORD && PASSWORD.trim() !== "") {
+                dataToUpdate.password = await hash(PASSWORD, 10);
+            }
+
+            await prisma.usuarios.update({
+                where: { id: Number(ID) },
+                data: dataToUpdate
+            });
+
+            return response.status(200).json({ message: `Usuário ${NAME} atualizado com sucesso!` });
+
+        } catch (error: any) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                const target = error.meta?.target as string[] || [];
+                const errorMessage = error.message || "";
+
+                const isEmailConflict = target.includes('email') || errorMessage.includes('idx_usuarios_email_ativo');
+                const isNameConflict = target.includes('name') || errorMessage.includes('idx_usuarios_name_ativo');
+
+                if (isNameConflict) return response.status(409).json({ message: 'Este nome já está em uso por um usuário ativo.' });
+                if (isEmailConflict) return response.status(409).json({ message: 'Este e-mail já está em uso por um usuário ativo.' });
+            }
+
+            console.error("Erro no editUsuario:", error);
+            return response.status(500).json({ message: 'Erro interno ao processar edição.' });
         }
     }
 
@@ -94,44 +133,6 @@ class UserRepository {
         } catch (error) {
             // console.error("ERRO DETALHADO:", error); // <--- ADICIONA ISTO
             return response.status(500).json({ message: 'Erro interno no login.' });
-        }
-    }
-
-    async editUsuario(request: Request, response: Response) {
-        const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
-
-        try {
-            const dataToUpdate: any = {
-                name: NAME,
-                email: EMAIL,
-                role_id: Number(ROLE_ID),
-                updated_at: new Date() // Atualiza a data de modificação
-            };
-
-            // Só faz hash se a senha foi enviada
-            if (PASSWORD && PASSWORD.trim() !== "") {
-                dataToUpdate.password = await hash(PASSWORD, 10);
-            }
-
-            // Atualiza direto pelo Prisma (sem Procedure)
-            await prisma.usuarios.update({
-                where: { id: Number(ID) },
-                data: dataToUpdate
-            });
-
-            return response.status(200).json({ message: `Usuário ${NAME} atualizado com sucesso!` });
-
-        } catch (error: any) {
-            // Mesmo tratamento de erro do Cadastrar (Unique Constraint)
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                const target = error.meta?.target as string[];
-
-                if (target && target.includes('name')) return response.status(409).json({ message: 'Este nome já está em uso.' });
-                if (target && target.includes('email')) return response.status(409).json({ message: 'Este e-mail já está em uso.' });
-            }
-
-            console.error("Erro no editUsuario:", error);
-            return response.status(500).json({ message: 'Erro interno ao processar edição.' });
         }
     }
 
