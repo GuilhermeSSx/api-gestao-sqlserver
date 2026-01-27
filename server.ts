@@ -9,7 +9,7 @@ const app = express();
 
 // 1. Configuração CORS correta e centralizada
 app.use(cors({
-    origin: "*", // Em produção, troca "*" pela URL do teu frontend (ex: https://meusite.com)
+    origin: "https://simplesagil.com.br/, https://localhost:3000/", // Em produção, troca "*" pela URL do teu frontend (ex: https://meusite.com)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"]
 }));
