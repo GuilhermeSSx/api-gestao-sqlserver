@@ -2,6 +2,7 @@
 import { PrismaClient } from '@prisma/client'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { hash } from 'bcrypt';
 import dotenv from 'dotenv'
 
 // Carrega as variáveis de ambiente
@@ -19,6 +20,8 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
     console.log('🌱 Iniciando o seed...')
 
+    const passwordHash = await hash('gui123', 6)
+
     // 1. Criar o Tenant (A Loja "Simples Ágil")
     const tenant = await prisma.tenant.create({
         data: {
@@ -34,7 +37,7 @@ async function main() {
         data: {
             name: 'Admin',
             email: 'admin@simplesagil.com.br',
-            password: 'senha_hash_temporaria',
+            password: passwordHash, // <--- Salva o hash, não o texto
             tenantId: tenant.id
         }
     })
