@@ -4,25 +4,27 @@ import { sign } from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
 import { Prisma } from '@prisma/client';
 
-export function getUsers() {
-    return prisma.usuarios.findMany();
-}
-
-class UserRepository {
+export class UserRepository {
 
     async cadastrar(request: Request, response: Response) {
+        // Agora tenant_id é string (UUID), não converta para Number
         const { name, email, password, role_id, tenant_id } = request.body;
 
         try {
             const passwordHash = await hash(password, 10);
 
-            await prisma.usuarios.create({
+            // Verifica se tem tenant_id (obrigatório agora com UUID)
+            if (!tenant_id) {
+                return response.status(400).json({ message: 'tenant_id é obrigatório.' });
+            }
+
+            await prisma.user.create({
                 data: {
                     name,
                     email,
                     password: passwordHash,
-                    role_id: Number(role_id),
-                    tenant_id: tenant_id ? Number(tenant_id) : 1
+                    roleId: Number(role_id), // Mantido Number pois no schema é Int
+                    tenantId: tenant_id // Passa direto como string (UUID)
                 }
             });
 
@@ -30,21 +32,21 @@ class UserRepository {
 
         } catch (error: any) {
             if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-                // Verificamos tanto o target quanto a mensagem para cobrir o índice parcial do Postgres
                 const target = error.meta?.target as string[] || [];
                 const errorMessage = error.message || "";
 
-                const isEmailConflict = target.includes('email') || errorMessage.includes('idx_usuarios_email_ativo');
-                const isNameConflict = target.includes('name') || errorMessage.includes('idx_usuarios_name_ativo');
+                // Ajuste para pegar os nomes dos índices que definimos no map: "idx_users_..."
+                const isEmailConflict = target.includes('email') || errorMessage.includes('idx_users_email');
+                const isNameConflict = target.includes('name') || errorMessage.includes('idx_users_name');
 
                 if (isNameConflict) {
-                    return response.status(409).json({ message: 'Este nome já está em uso por um usuário ativo.' });
+                    return response.status(409).json({ message: 'Este nome já está em uso.' });
                 }
                 if (isEmailConflict) {
-                    return response.status(409).json({ message: 'Este e-mail já está em uso por um usuário ativo.' });
+                    return response.status(409).json({ message: 'Este e-mail já está em uso.' });
                 }
 
-                return response.status(409).json({ message: 'Dados duplicados em usuários ativos.' });
+                return response.status(409).json({ message: 'Dados duplicados.' });
             }
 
             return response.status(400).json({ message: 'Erro ao cadastrar usuário.', erro: error.message });
@@ -52,37 +54,40 @@ class UserRepository {
     }
 
     async editUsuario(request: Request, response: Response) {
+        // ID agora é string (UUID)
         const { ID, NAME, EMAIL, PASSWORD, ROLE_ID } = request.body;
 
         try {
             const dataToUpdate: any = {
                 name: NAME,
                 email: EMAIL,
-                role_id: Number(ROLE_ID),
-                updated_at: new Date()
+                roleId: Number(ROLE_ID), // Mantido Number
+                updatedAt: new Date()    // Corrigido para camelCase (updatedAt) conforme schema
             };
 
             if (PASSWORD && PASSWORD.trim() !== "") {
                 dataToUpdate.password = await hash(PASSWORD, 10);
             }
 
-            await prisma.usuarios.update({
-                where: { id: Number(ID) },
+            await prisma.user.update({
+                where: { id: ID }, // Sem Number(), UUID é string
                 data: dataToUpdate
             });
 
             return response.status(200).json({ message: `Usuário ${NAME} atualizado com sucesso!` });
 
         } catch (error: any) {
+            // Lógica de erro de duplicidade mantida
             if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
                 const target = error.meta?.target as string[] || [];
                 const errorMessage = error.message || "";
-
-                const isEmailConflict = target.includes('email') || errorMessage.includes('idx_usuarios_email_ativo');
-                const isNameConflict = target.includes('name') || errorMessage.includes('idx_usuarios_name_ativo');
-
-                if (isNameConflict) return response.status(409).json({ message: 'Este nome já está em uso por um usuário ativo.' });
-                if (isEmailConflict) return response.status(409).json({ message: 'Este e-mail já está em uso por um usuário ativo.' });
+                
+                if (target.includes('name') || errorMessage.includes('idx_users_name')) {
+                     return response.status(409).json({ message: 'Este nome já está em uso.' });
+                }
+                if (target.includes('email') || errorMessage.includes('idx_users_email')) {
+                    return response.status(409).json({ message: 'Este e-mail já está em uso.' });
+                }
             }
 
             console.error("Erro no editUsuario:", error);
@@ -94,11 +99,10 @@ class UserRepository {
         const { email, password } = request.body;
 
         try {
-            // Verifica se usuario existe E se não foi deletado (Soft Delete)
-            const user = await prisma.usuarios.findFirst({
+            const user = await prisma.user.findFirst({
                 where: {
                     email,
-                    deleted_at: null
+                    deletedAt: null
                 }
             });
 
@@ -116,8 +120,8 @@ class UserRepository {
                     id: user.id,
                     name: user.name,
                     email: user.email,
-                    role_id: user.role_id,
-                    tenant_id: user.tenant_id // Importante colocar no token para usar depois
+                    role_id: user.roleId,
+                    tenant_id: user.tenantId // UUID String
                 },
                 process.env.SECRET as string,
                 { expiresIn: "1d" }
@@ -127,22 +131,21 @@ class UserRepository {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role_id: user.role_id,
+                role_id: user.roleId,
                 token
             });
         } catch (error) {
-            // console.error("ERRO DETALHADO:", error); // <--- ADICIONA ISTO
             return response.status(500).json({ message: 'Erro interno no login.' });
         }
     }
 
     async getUsers(request: Request, response: Response) {
         try {
-            const usuarios = await prisma.usuarios.findMany({
+            const usuarios = await prisma.user.findMany({
                 where: {
-                    deleted_at: null // Traz apenas quem não foi excluído
+                    deletedAt: null
                 },
-                select: { id: true, name: true, email: true, role_id: true },
+                select: { id: true, name: true, email: true, roleId: true },
                 orderBy: { name: 'asc' }
             });
             return response.status(200).json({ usuarios });
@@ -154,15 +157,17 @@ class UserRepository {
     async deleteUser(request: Request, response: Response) {
         const { id } = request.params;
 
-        if (id === '585') { // Mantive sua trava de segurança hardcoded
-            return response.status(401).json({ message: 'Ação não autorizada para este administrador.' });
+        // ATENÇÃO: A lógica antiga (id === '585') não funciona com UUID.
+        // Se você quiser proteger o admin, verifique pelo email ou flag no banco.
+        /* if (id === 'uuid-do-admin-aqui') { 
+            return response.status(401).json({ message: 'Ação não autorizada.' });
         }
+        */
 
         try {
-            // Soft Delete: Não apaga, apenas marca a data
-            await prisma.usuarios.update({
-                where: { id: Number(id) },
-                data: { deleted_at: new Date() }
+            await prisma.user.update({
+                where: { id: id }, // Sem Number(), UUID é string
+                data: { deletedAt: new Date() }
             });
 
             return response.status(200).json({ message: 'Usuário excluído com sucesso', id });
@@ -175,17 +180,15 @@ class UserRepository {
         const { search } = request.body;
 
         try {
-            // Busca nativa do Prisma (muito melhor que Procedure)
-            const usuarios_filtrados = await prisma.usuarios.findMany({
+            const usuarios_filtrados = await prisma.user.findMany({
                 where: {
-                    deleted_at: null, // Ignora excluídos
+                    deletedAt: null,
                     OR: [
-                        // Busca case-insensitive (tanto faz maiúscula ou minúscula)
                         { name: { contains: search, mode: 'insensitive' } },
                         { email: { contains: search, mode: 'insensitive' } }
                     ]
                 },
-                select: { id: true, name: true, email: true, role_id: true }
+                select: { id: true, name: true, email: true, roleId: true }
             });
 
             return response.status(200).json({ usuarios_filtrados });
@@ -195,23 +198,22 @@ class UserRepository {
     }
 
     async consultarRoleIdUsuario(request: Request, response: Response) {
-        // Verifique se o nome aqui é exatamente 'user_id'
         const { user_id } = request.body;
 
         try {
-            const user = await prisma.usuarios.findUnique({
-                where: { id: Number(user_id) },
-                select: { role_id: true }
+            // Se user_id vier vazio ou undefined, findUnique quebra. Validamos antes.
+            if (!user_id) return response.status(400).json({ message: 'user_id obrigatório' });
+
+            const user = await prisma.user.findUnique({
+                where: { id: user_id }, // UUID direto
+                select: { roleId: true }
             });
 
             if (!user) return response.status(404).json({ message: 'Usuário não encontrado' });
 
-            // Retornamos apenas o número
-            return response.status(200).json(user.role_id);
+            return response.status(200).json(user.roleId);
         } catch (error) {
             return response.status(500).json({ message: 'Erro interno.' });
         }
     }
 }
-
-export { UserRepository };

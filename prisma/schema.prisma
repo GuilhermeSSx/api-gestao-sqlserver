@@ -1,23 +1,78 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters", "fullTextSearchPostgres"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model usuarios {
-  id          Int       @id @default(autoincrement())
-  name        String    // Removido @unique
-  email       String    // Removido @unique
-  password    String
-  role_id     Int       @default(1)
-  tenant_id   Int
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @default(now())
-  deleted_at  DateTime?
+model Tenant {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @db.VarChar(255)
+  slug      String    @unique @db.VarChar(50)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  products  Product[]
+  users     User[]
 
-  // Adicione isso para o Prisma reconhecer os índices que você criou no SQL
-  @@index([email], map: "idx_usuarios_email_ativo")
-  @@index([name], map: "idx_usuarios_name_ativo")
+  @@map("tenants")
+}
+
+model User {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  roleId    Int       @default(1) @map("role_id")
+  name      String    @db.VarChar(255)
+  email     String    @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([email], map: "idx_users_email")
+  @@index([name], map: "idx_users_name")
+  @@index([tenantId], map: "idx_users_tenant")
+  @@map("users")
+}
+
+model Product {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @map("tenant_id") @db.Uuid
+  name             String         @db.VarChar(255)
+  description      String?
+  sku              String         @db.VarChar(100)
+  barcode          String?        @db.VarChar(50)
+  priceCost        Decimal        @default(0) @map("price_cost") @db.Decimal(19, 4)
+  priceSale        Decimal        @map("price_sale") @db.Decimal(19, 4)
+  stockQuantity    Decimal        @default(0) @map("stock_quantity") @db.Decimal(19, 3)
+  minStockQuantity Decimal        @default(0) @map("min_stock_quantity") @db.Decimal(19, 3)
+  specifications   Json?          @default("{}")
+  isActive         Boolean        @default(true) @map("is_active")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  deletedAt        DateTime?      @map("deleted_at")
+  images           ProductImage[]
+  tenant           Tenant         @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, sku])
+  @@index([tenantId, barcode])
+  @@map("products")
+}
+
+model ProductImage {
+  id              String    @id @default(uuid()) @db.Uuid
+  productId       String    @map("product_id") @db.Uuid
+  imageUrl        String    @map("image_url")
+  storageProvider String?   @map("storage_provider") @db.VarChar(50)
+  displayOrder    Int       @default(0) @map("display_order")
+  isCover         Boolean   @default(false) @map("is_cover")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  deletedAt       DateTime? @map("deleted_at")
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_images")
 }
