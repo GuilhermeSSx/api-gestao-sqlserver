@@ -23,13 +23,13 @@ model Tenant {
 model User {
   id        String    @id @default(uuid()) @db.Uuid
   tenantId  String    @map("tenant_id") @db.Uuid
-  roleId    Int       @default(1) @map("role_id")
   name      String    @db.VarChar(255)
   email     String    @db.VarChar(255)
   password  String    @db.VarChar(255)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
+  role      Role      @default(USER)
   tenant    Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([email], map: "idx_users_email")
@@ -75,4 +75,11 @@ model ProductImage {
 
   @@index([productId])
   @@map("product_images")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+  MANAGER
 }

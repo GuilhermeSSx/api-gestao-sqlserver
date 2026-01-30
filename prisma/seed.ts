@@ -32,17 +32,54 @@ async function main() {
 
     console.log(`✅ Tenant criado: ${tenant.id}`)
 
-    // 2. Criar o Usuário Admin
-    const user = await prisma.user.create({
+    const userSA = await prisma.user.create({
         data: {
-            name: 'Admin',
-            email: 'admin@simplesagil.com.br',
-            password: passwordHash, // <--- Salva o hash, não o texto
-            tenantId: tenant.id
+            name: 'SAdmin',
+            email: 'adminsa@simplesagil.com.br',
+            password: passwordHash,
+            tenantId: tenant.id,
+            role: 'SUPER_ADMIN'
         }
     })
 
-    console.log(`✅ Usuário criado: ${user.id}`)
+    console.log(`✅ Usuário SA: ${userSA.id}`)
+
+    const userAdmin = await prisma.user.create({
+        data: {
+            name: 'Admin Tenant',
+            email: 'admintenant@simplesagil.com.br',
+            password: passwordHash,
+            tenantId: tenant.id,
+            role: 'ADMIN'
+        }
+    })
+
+    console.log(`✅ Usuário Admin: ${userAdmin.id}`)
+
+    const userManager = await prisma.user.create({
+        data: {
+            name: 'Gerente da Loja',
+            email: 'gerente@simplesagil.com.br',
+            password: passwordHash,
+            tenantId: tenant.id,
+            role: 'MANAGER'
+        }
+    })
+
+    console.log(`✅ Usuário Gerente: ${userManager.id}`)
+
+        const user = await prisma.user.create({
+        data: {
+            name: 'Funcionário',
+            email: 'funcionario@simplesagil.com.br',
+            password: passwordHash,
+            tenantId: tenant.id,
+            role: 'USER'
+        }
+    })
+
+    console.log(`✅ Usuário Funcionário: ${user.id}`)
+    
 
     // 3. Criar um Produto de Exemplo
     const produto = await prisma.product.create({
