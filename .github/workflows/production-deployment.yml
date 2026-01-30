@@ -10,7 +10,6 @@ permissions:
   statuses: write
 
 jobs:
-  # 1. BLINDAGEM: Testa se o Backend compila antes de subir
   check-quality:
     runs-on: ubuntu-latest
     steps:
@@ -23,21 +22,24 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      # CORREÇÃO AQUI: Passamos a ENV fake durante a instalação
       - name: Install dependencies
         run: npm ci
+        env:
+          DATABASE_URL: "postgresql://build:build@localhost:5432/build_db"
 
-      # Se você usa Prisma, geralmente precisa gerar o cliente antes do build
+      # Esse passo agora é tecnicamente redundante pois o postinstall já rodou, 
+      # mas mal não faz mantê-lo para garantir.
       - name: Generate Prisma Client
         run: npx prisma generate
         env:
-           # Fake URL apenas para o generate funcionar (não conecta no banco real)
            DATABASE_URL: "postgresql://build:build@localhost:5432/build_db"
 
       - name: Run Build
         run: npm run build
-        # Se seu build precisar de outras variáveis, adicione aqui como fake
+        env:
+           DATABASE_URL: "postgresql://build:build@localhost:5432/build_db"
 
-  # 2. DEPLOY: Só roda se o check-quality passar
   deploy-production:
     needs: check-quality
     runs-on: ubuntu-latest
@@ -46,12 +48,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # CHAMA O WEBHOOK DA COOLIFY (DA API)
       - name: Trigger Coolify Deploy
         run: |
           curl --request GET '${{ secrets.COOLIFY_WEBHOOK }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
 
-      # Atualiza o status no GitHub com o link da API
       - name: Create GitHub Deployment UI
         uses: chrnorm/deployment-action@v2
         id: deployment
