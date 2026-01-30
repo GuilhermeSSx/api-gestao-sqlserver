@@ -1,24 +1,58 @@
-name: Production Deployment UI
+name: Production Deployment API
 
 on:
   push:
     branches: [ "main" ]
 
-# --- ADICIONE ESTE BLOCO ---
 permissions:
   deployments: write
   contents: read
   statuses: write
-# ---------------------------
 
 jobs:
-  update-github-ui:
+  # 1. BLINDAGEM: Testa se o Backend compila antes de subir
+  check-quality:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Se você usa Prisma, geralmente precisa gerar o cliente antes do build
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+           # Fake URL apenas para o generate funcionar (não conecta no banco real)
+           DATABASE_URL: "postgresql://build:build@localhost:5432/build_db"
+
+      - name: Run Build
+        run: npm run build
+        # Se seu build precisar de outras variáveis, adicione aqui como fake
+
+  # 2. DEPLOY: Só roda se o check-quality passar
+  deploy-production:
+    needs: check-quality
+    runs-on: ubuntu-latest
+    if: success() 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create GitHub Deployment
+      # CHAMA O WEBHOOK DA COOLIFY (DA API)
+      - name: Trigger Coolify Deploy
+        run: |
+          curl --request GET '${{ secrets.COOLIFY_WEBHOOK }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+
+      # Atualiza o status no GitHub com o link da API
+      - name: Create GitHub Deployment UI
         uses: chrnorm/deployment-action@v2
         id: deployment
         with:
