@@ -24,7 +24,7 @@ export class UserRepository {
                     password: passwordHash,
                     // Agora usamos o campo 'role' com o Enum.
                     // Se não vier nada, assume USER por segurança.
-                    role: (role as Role) || Role.USER, 
+                    role: (role as Role) || Role.USER,
                     tenantId: tenant_id
                 }
             });
@@ -58,7 +58,7 @@ export class UserRepository {
                 name: NAME,
                 email: EMAIL,
                 // Atualiza o enum role
-                role: ROLE_ID as Role, 
+                role: ROLE_ID as Role,
                 updatedAt: new Date()
             };
 
@@ -77,9 +77,9 @@ export class UserRepository {
             if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
                 const target = error.meta?.target as string[] || [];
                 const errorMessage = error.message || "";
-                
+
                 if (target.includes('name') || errorMessage.includes('idx_users_name')) {
-                     return response.status(409).json({ message: 'Este nome já está em uso.' });
+                    return response.status(409).json({ message: 'Este nome já está em uso.' });
                 }
                 if (target.includes('email') || errorMessage.includes('idx_users_email')) {
                     return response.status(409).json({ message: 'Este e-mail já está em uso.' });
@@ -153,20 +153,39 @@ export class UserRepository {
         const { id } = request.params;
 
         try {
-            // Dica de segurança: Impedir que o SUPER_ADMIN seja deletado
-            const userToDelete = await prisma.user.findUnique({ where: { id }});
-            if (userToDelete?.role === 'SUPER_ADMIN') {
-                 return response.status(403).json({ message: 'Não é possível excluir o Super Admin.' });
+            // Buscamos o usuário antes de tentar excluir
+            const userToDelete = await prisma.user.findUnique({
+                where: { id }
+            });
+
+            if (!userToDelete) {
+                return response.status(404).json({ message: 'Usuário não encontrado.' });
             }
 
+            // --- TRAVA DE SEGURANÇA ---
+            // 1. Protege o SUPER_ADMIN (Você)
+            if (userToDelete.role === 'SUPER_ADMIN') {
+                return response.status(403).json({ message: 'Operação não permitida: Não é possível excluir o Super Admin.' });
+            }
+
+            // 2. Protege o ADMIN (Dono da Loja/Cliente Pagante)
+            if (userToDelete.role === 'ADMIN') {
+                return response.status(403).json({
+                    message: 'Atenção: Não é possível excluir o Dono da Loja. Para encerrar o acesso, é necessário cancelar a assinatura da empresa.'
+                });
+            }
+
+            // Se for MANAGER ou USER, prossegue com a exclusão (Soft Delete)
             await prisma.user.update({
                 where: { id: id },
                 data: { deletedAt: new Date() }
             });
 
             return response.status(200).json({ message: 'Usuário excluído com sucesso', id });
+
         } catch (error) {
-            return response.status(404).json({ message: 'Usuário não encontrado ou erro ao excluir.' });
+            console.error("Erro ao excluir usuário:", error);
+            return response.status(500).json({ message: 'Erro interno ao tentar excluir o usuário.' });
         }
     }
 

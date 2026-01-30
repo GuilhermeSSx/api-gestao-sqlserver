@@ -47,7 +47,7 @@ async function main() {
     const userAdmin = await prisma.user.create({
         data: {
             name: 'Admin Tenant',
-            email: 'admintenant@simplesagil.com.br',
+            email: 'admin@simplesagil.com.br',
             password: passwordHash,
             tenantId: tenant.id,
             role: 'ADMIN'
