@@ -126,7 +126,8 @@ export class UserRepository {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role, // Retornando role atualizada
+                role: user.role,
+                tenant_id: user.tenantId,
                 token
             });
         } catch (error) {
